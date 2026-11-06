@@ -1,0 +1,37 @@
+{
+  "schema_version": "1.0.0",
+  "profile_id": "lsc",
+  "vocabularies": {
+    "boundary_quality": ["exact", "approximate", "unverified"],
+    "annotation_status": ["draft", "reviewed", "adjudicated", "rejected"],
+    "utterance_type": ["declarative", "interrogative_wh", "interrogative_polar", "imperative", "narrative"],
+    "hand_location": [
+      "neutral_space",
+      "forehead",
+      "temple",
+      "eye",
+      "nose",
+      "cheek",
+      "mouth",
+      "chin",
+      "neck",
+      "shoulder",
+      "chest",
+      "abdomen",
+      "non_dominant_hand"
+    ],
+    "facial_nonmanual": [
+      "neutral",
+      "eyebrows_raised",
+      "eyebrows_furrowed",
+      "eyes_widened",
+      "eyes_squinted",
+      "cheeks_puffed",
+      "mouth_open",
+      "lips_pressed",
+      "mouthing_spanish",
+      "mouthing_lsc"
+    ],
+    "head_movement": ["neutral", "nod", "shake", "tilt_left", "tilt_right", "forward_thrust", "backward_retraction"]
+  }
+}

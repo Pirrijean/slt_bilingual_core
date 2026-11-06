@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "model_id": "mediapipe_hand_landmarker_full",
+  "task_type": "hand_landmarker",
+  "artifact": "hand_landmarker.task",
+  "upstream": "MediaPipe Hand Landmarker",
+  "upstream_url": "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task",
+  "license": "Apache-2.0",
+  "model_version": "float16/1",
+  "max_hands_supported": 2,
+  "landmarks_per_hand": 21,
+  "coordinate_systems": [
+    "normalized_image",
+    "world_meters"
+  ],
+  "sha256": "fbc2a30080c3c557093b5ddfc334698132eb341044ccee322ccf8bcf3607cde1",
+  "validated_platforms": ["windows_x86_64"],
+  "validation_status": "validated_local"
+}

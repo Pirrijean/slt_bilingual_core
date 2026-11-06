@@ -1,6 +1,9 @@
-import pytest
 import time
-from slt.interaction import SLTInteractionEngine, InteractionState, SignEvent
+
+import pytest
+
+from slt.interaction import InteractionState, SignEvent, SLTInteractionEngine
+
 
 def test_interaction_engine_initial_state():
     engine = SLTInteractionEngine(window_size=5, quorum_count=3, min_hold_seconds=0.05)

@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://slt.org/schemas/dataset_release.schema.json",
+  "title": "DatasetReleaseManifest",
+  "description": "Schema for immutable dataset release manifests",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "release_id",
+    "dataset_id",
+    "dataset_version",
+    "profile_id",
+    "task",
+    "created_at_utc",
+    "corpus_version",
+    "annotation_schema_version",
+    "usage_scope",
+    "split_manifest_relpath",
+    "approval_status",
+    "source_recording_ids",
+    "annotation_document_ids",
+    "license_review_status"
+  ],
+  "properties": {
+    "schema_version": { "type": "string" },
+    "release_id": { "type": "string" },
+    "dataset_id": { "type": "string" },
+    "dataset_version": { "type": "string" },
+    "profile_id": { "type": "string" },
+    "task": { "type": "string" },
+    "created_at_utc": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "corpus_version": { "type": "string" },
+    "annotation_schema_version": { "type": "string" },
+    "usage_scope": {
+      "type": "string",
+      "enum": [
+        "record_and_store",
+        "derive_landmarks",
+        "internal_research",
+        "noncommercial_training",
+        "commercial_training",
+        "share_with_partners",
+        "publish_raw_video",
+        "publish_derived_data"
+      ]
+    },
+    "split_manifest_relpath": { "type": "string" },
+    "approval_status": {
+      "type": "string",
+      "enum": ["draft", "approved", "rejected"]
+    },
+    "source_recording_ids": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "annotation_document_ids": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "license_review_status": { "type": "string" },
+    "parent_release_id": { "type": ["string", "null"] },
+    "code_commit": { "type": ["string", "null"] }
+  },
+  "additionalProperties": false
+}

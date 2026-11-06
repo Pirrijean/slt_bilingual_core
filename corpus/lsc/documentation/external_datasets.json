@@ -1,0 +1,67 @@
+{
+  "schema_version": "1.0.0",
+  "audit_date": "2026-11-06",
+  "resources": [
+    {
+      "resource_id": "LSC50",
+      "name": "LSC50 Colombian Sign Language Dataset",
+      "publication_url": "https://www.nature.com/articles/s41597-024-04172-5",
+      "repository_url": "https://github.com/BiomecanicaUniandes/LSC50",
+      "documented_content": [
+        "RGB_video",
+        "depth_video",
+        "infrared_video",
+        "hand_landmarks",
+        "face_landmarks",
+        "pose_landmarks",
+        "IMU"
+      ],
+      "publication_license": "CC-BY-NC-ND-4.0",
+      "code_license": "MIT",
+      "dataset_asset_license": "requires_asset_level_verification",
+      "commercial_use_status": "not_authorized",
+      "derivative_use_status": "requires_review",
+      "redistribution_status": "requires_review",
+      "quarantine_reason": "Article published under CC BY-NC-ND 4.0; MIT code license does not cover raw videos and biometric media. Commercial rights unconfirmed.",
+      "decision": "quarantine_pending_review"
+    },
+    {
+      "resource_id": "LSC70",
+      "name": "Dynamic Colombian Sign Language Dataset",
+      "publication_url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC11720433/",
+      "repository_url": "https://data.mendeley.com/datasets/9ssyn8tff5/2",
+      "documented_content": [
+        "sign_images",
+        "dynamic_sequences"
+      ],
+      "publication_license": "CC-BY",
+      "code_license": "unspecified",
+      "dataset_asset_license": "requires_repository_verification",
+      "commercial_use_status": "not_authorized",
+      "derivative_use_status": "requires_review",
+      "redistribution_status": "requires_review",
+      "quarantine_reason": "Article available for research; dataset asset terms and biometric participant consent documentation require formal legal sign-off.",
+      "decision": "quarantine_pending_review"
+    },
+    {
+      "resource_id": "LSC54",
+      "name": "LSC-54 Landmark-Based Dataset",
+      "publication_url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC12557509/",
+      "repository_url": "https://www.scidb.cn/en/detail?dataSetId=0fa5acc6293543bba9a39a822988843e",
+      "documented_content": [
+        "hand_landmarks",
+        "face_landmarks",
+        "pose_landmarks",
+        "time_series"
+      ],
+      "publication_license": "CC-BY-NC-4.0",
+      "code_license": "unspecified",
+      "dataset_asset_license": "requires_repository_verification",
+      "commercial_use_status": "not_authorized",
+      "derivative_use_status": "requires_review",
+      "redistribution_status": "requires_review",
+      "quarantine_reason": "2,850 original videos augmented 45x with forward imputation for missing hands. Derivative imputation requires research-only isolation.",
+      "decision": "quarantine_pending_review"
+    }
+  ]
+}

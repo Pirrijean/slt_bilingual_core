@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://slt.org/schemas/consent.schema.json",
+  "title": "ConsentRecord",
+  "description": "Schema for purpose-specific participant informed consent authorizations",
+  "type": "object",
+  "required": [
+    "consent_id",
+    "signer_id",
+    "form_version",
+    "signed_at_utc",
+    "granted_purposes",
+    "evidence_sha256"
+  ],
+  "properties": {
+    "consent_id": { "type": "string" },
+    "signer_id": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9_-]+$"
+    },
+    "form_version": { "type": "string" },
+    "signed_at_utc": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "granted_purposes": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "record_and_store",
+          "derive_landmarks",
+          "internal_research",
+          "noncommercial_training",
+          "commercial_training",
+          "share_with_partners",
+          "publish_raw_video",
+          "publish_derived_data"
+        ]
+      },
+      "uniqueItems": true,
+      "minItems": 1
+    },
+    "evidence_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "revoked_at_utc": {
+      "type": ["string", "null"],
+      "format": "date-time"
+    }
+  },
+  "additionalProperties": false
+}

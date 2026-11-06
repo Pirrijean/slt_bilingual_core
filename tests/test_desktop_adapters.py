@@ -1,16 +1,14 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 Tests for slt_desktop.recognition_adapter and slt_desktop.translation_adapter.
 Verifies contract compliance, FSM integration, and bilingual translation.
 """
-import pytest
 import numpy as np
+
 from slt_desktop.hand_landmarker import HandObservation
 from slt_desktop.recognition_adapter import (
+    RecognitionUnavailable,
     build_recognition_backend,
-    SLTRecognitionBackend,
-    RecognitionUnavailable
 )
 from slt_desktop.translation_adapter import TranslationAdapter
 

@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://slt.org/schemas/corpus.schema.json",
+  "title": "CorpusMetadata",
+  "description": "Schema for sign language corpus configuration and metadata",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "corpus_id",
+    "display_name",
+    "profile_id",
+    "corpus_version",
+    "status",
+    "target_languages",
+    "annotation_schema_version",
+    "language_validation_status",
+    "community_governance_status",
+    "legal_review_status"
+  ],
+  "properties": {
+    "schema_version": { "type": "string" },
+    "corpus_id": { "type": "string" },
+    "display_name": { "type": "string" },
+    "profile_id": { "type": "string" },
+    "corpus_version": { "type": "string" },
+    "status": { "type": "string", "enum": ["development", "stable", "deprecated"] },
+    "target_languages": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "annotation_schema_version": { "type": "string" },
+    "language_validation_status": { "type": "string" },
+    "community_governance_status": { "type": "string" },
+    "legal_review_status": { "type": "string" },
+    "data_retention_policy_version": { "type": ["string", "null"] },
+    "capture_protocol_versions": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "lexicon_version": { "type": "string" },
+    "description": { "type": "string" }
+  },
+  "additionalProperties": false
+}

@@ -1,6 +1,8 @@
 """Integration tests for asynchronous speech synthesis."""
 import time
+
 from slt.speech import SpeechEngine
+
 
 def test_speech_engine_lifecycle():
     engine = SpeechEngine(mode="both")

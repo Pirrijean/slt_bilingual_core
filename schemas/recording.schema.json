@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://slt.org/schemas/recording.schema.json",
+  "title": "RecordingRecord",
+  "description": "Schema for raw media recordings stored in the corpus",
+  "type": "object",
+  "required": [
+    "recording_id",
+    "session_id",
+    "signer_id",
+    "source_video_sha256",
+    "storage_relative_path",
+    "duration_ns",
+    "width",
+    "height",
+    "container_format",
+    "video_codec",
+    "status"
+  ],
+  "properties": {
+    "recording_id": { "type": "string" },
+    "session_id": { "type": "string" },
+    "signer_id": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9_-]+$"
+    },
+    "source_video_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "storage_relative_path": { "type": "string" },
+    "duration_ns": { "type": "integer", "minimum": 1 },
+    "fps_num": { "type": ["integer", "null"], "minimum": 1 },
+    "fps_den": { "type": ["integer", "null"], "minimum": 1 },
+    "width": { "type": "integer", "minimum": 1 },
+    "height": { "type": "integer", "minimum": 1 },
+    "container_format": { "type": "string" },
+    "video_codec": { "type": "string" },
+    "status": {
+      "type": "string",
+      "enum": ["ingested", "verified", "rejected", "archived"]
+    },
+    "parent_recording_id": { "type": ["string", "null"] },
+    "metadata_json": { "type": "string" }
+  },
+  "additionalProperties": false
+}

@@ -1,16 +1,17 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 Tests for slt_desktop.main_window module.
 Verifies MainWindow lifecycle, component wiring, sign confirmation, and undo/clear in headless mode.
 """
 import os
 import sys
+
 import pytest
 
 os.environ["QT_QPA_PLATFORM"] = "offscreen"
 
 from PySide6.QtWidgets import QApplication
+
 from slt_desktop.main_window import MainWindow
 
 

@@ -1,0 +1,35 @@
+{
+  "schema_version": "1.0.0",
+  "protocol_id": "lsc_continuous_v1",
+  "profile_id": "lsc",
+  "mode": "continuous",
+  "status": "draft",
+  "title": "LSC Continuous Communication Acquisition Protocol",
+  "recording": {
+    "resolution": [1920, 1080],
+    "minimum_fps": 30,
+    "audio_enabled": false,
+    "preserve_original": true
+  },
+  "tasks": [
+    {
+      "task_id": "task_description_001",
+      "task_type": "elicited_description",
+      "prompt_reference": "PROMPT_DESCRIPTION_LSC_V1",
+      "repetitions": 1,
+      "linguistic_review_status": "pending"
+    },
+    {
+      "task_id": "task_narrative_001",
+      "task_type": "narrative",
+      "prompt_reference": "PROMPT_NARRATIVE_LSC_V1",
+      "repetitions": 1,
+      "linguistic_review_status": "pending"
+    }
+  ],
+  "approval": {
+    "community_review": "pending",
+    "ethics_review": "pending",
+    "legal_review": "pending"
+  }
+}

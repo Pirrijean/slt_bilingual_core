@@ -1,102 +1,178 @@
-# SLT Bilingual Core: Architecture Blueprint
+# SLT Architecture Master Specification
 
-> **Philosophy**: *Construir sobre hombros de gigantes, pero desarrollar una solución propia.*
-
-The SLT Bilingual Core is structured as an original **Human-Machine Communication Workspace** designed for deaf and hard-of-hearing individuals. Rather than a fragile collection of glued libraries or a naive frame-by-frame classifier, SLT is built on a clean, decoupled, event-driven architecture centered around 4 fundamental pillars.
-
----
-
-## 1. The 4 Product Pillars
-
-1. **Reconocimiento e Interacción Visual en Tiempo Real:**
-   - La percepción y el reconocimiento operan de forma continua y transparente en segundo plano.
-   - **Modo A (Pantalla limpia - Predeterminado):** Muestra el flujo de cámara o video original sin esqueletos ni marcadores superpuestos, priorizando la dignidad y naturalidad de la comunicación.
-   - **Modo B (Modo demostración):** Interruptor independiente que superpone la visualización anatómica con la paleta de marca (Teal `#42BFB0`, articulaciones anti-aliased y badges de lateralidad).
-2. **Traducción y Subtítulos Bilingües Simultáneos:**
-   - Subtítulos de alta legibilidad en español e inglés en pantalla.
-   - Botón de copiado al portapapeles y barra de historial de señas con deshacer y limpiar.
-   - Procesamiento de archivos de video locales (MP4, AVI, MOV) con marcas de tiempo precisas y exportación a formatos estándar `.srt` y `.txt`.
-3. **Comunicación Mediante Síntesis de Voz:**
-   - Reproducción asíncrona no bloqueante mediante SAPI5 COM en Windows (`Helena` para español, `Zira` para inglés).
-   - Selección de modo de voz (Español, English, Ambos) y opción de voz automática.
-4. **Monitorización del Rendimiento (Cleanmeter Discreto):**
-   - Barra inferior con telemetría en tiempo real: FPS, latencia de percepción en milisegundos, número de manos detectadas y estado del motor.
-   - En modo de archivo de video: barra de progreso porcentual, FPS de procesamiento y tiempo estimado restante (ETA).
+**Versión:** 1.0.0 (Fase 0 - Fundacional)  
+**Alcance:** Arquitectura desacoplada, multilingüe, temporal y multiplataforma para SLT Bilingual Core.
 
 ---
 
-## 2. Diagrama Arquitectónico
+## 1. System Overview
 
-```
-+-------------------------------------------------------------------------+
-|                           PERCEPTION LAYER                              |
-|   OpenCV VideoCapture (Live / Video File) -> MediaPipe Tasks Landmarker |
-|            (RunningMode.VIDEO con timestamps monótonamente crecientes)  |
-+------------------------------------+------------------------------------+
-                                     | HandObservation (21 3D Landmarks)
-                                     v
-+-------------------------------------------------------------------------+
-|                      ADAPTADOR DE RECONOCIMIENTO                        |
-|       slt_desktop.recognition_adapter.SLTRecognitionBackend             |
-|   1. Extractor geométrico 106-D invariante (slt.recognition)            |
-|   2. Clasificador k-NN ponderado con rechazo (slt.recognition)          |
-|   3. Máquina de estados finitos y quórum temporal (slt.interaction)     |
-+------------------------------------+------------------------------------+
-                                     | Confirmed Sign Events
-                                     v
-+-------------------------------------------------------------------------+
-|                       ADAPTADOR DE TRADUCCIÓN                           |
-|       slt_desktop.translation_adapter.TranslationAdapter                |
-|   BilingualTranslator + Lexicon + SemanticFrame (slt.language)          |
-+------------------+---------------------------------+--------------------+
-                   | Simultaneous (ES / EN)           | Sign Events List
-                   v                                  v
-+------------------------------------+   +--------------------------------+
-|       SÍNTESIS DE VOZ ASÍNCRONA    |   |      SUBTÍTULOS Y EXPORTACIÓN  |
-|   slt.speech.SpeechWorker          |   |  slt_desktop.subtitles         |
-|   (SAPI5 COM Dispatch sin bloqueo) |   |  - create_srt_content (SRT)    |
-|   - Helena (ES) / Zira (EN)        |   |  - create_transcription_txt    |
-+------------------+-----------------+   +----------------+---------------+
-                   | Audio Wave                           | .srt / .txt
-                   v                                      v
-+-------------------------------------------------------------------------+
-|                     CAPA DE INTERFAZ DE USUARIO                         |
-|       slt_desktop.main_window.MainWindow (PySide6)                      |
-|   - Modo A (Limpio) / Modo B (Demostración)                             |
-|   - Subtítulos bilingües simultáneos + Copiar traducción                |
-|   - Tira cronológica de señas con Deshacer y Limpiar                    |
-|   - Cleanmeter: FPS, latencia ms, manos, ETA                            |
-+-------------------------------------------------------------------------+
+El sistema **SLT Bilingual Core** está estructurado como un espacio de trabajo modular para la percepción, reconocimiento continuo, estructuración semántica y traducción simultánea de lengua de señas a múltiples idiomas hablados y escritos.
+
+### Diagrama General de Componentes
+
+```mermaid
+graph TD
+    Source[Frame Sources: Cámara / Video] -->|FramePacket| Perception[PerceptionBackend]
+    Perception -->|PerceptionFrame| Recognizer[RecognitionBackend]
+    Recognizer -->|RecognitionHypothesis| Decoder[TemporalDecoder]
+    Decoder -->|SignEvent Stream| Buffer[PhraseBuffer]
+    Buffer -->|Sequence of SignEvent| Translator[TranslationBackend]
+    Translator -->|TranslationOutput| Output[Subtítulos SRT / SpeechBackend SAPI5]
+    
+    Profiles[ProfileRegistry: profiles/sign_languages] -.->|LanguageProfile| Recognizer
+    Profiles -.->|LanguageProfile| Decoder
+    Profiles -.->|LanguageProfile| Translator
 ```
 
 ---
 
-## 3. Responsabilidades de Módulos
+## 2. SLT Core (`src/slt_core/`)
 
-| Paquete / Módulo | Rol y Responsabilidad |
-| :--- | :--- |
-| `src/slt_desktop/hand_landmarker.py` | MediaPipe Tasks HandLandmarker en `RunningMode.VIDEO` garantizando marcas de tiempo monótonamente crecientes. Emite instancias de `HandObservation`. |
-| `src/slt_desktop/drawing.py` | Renderizado anatómico minimalista de esqueletos y articulaciones en la paleta oficial (Teal `#42BFB0`, Mint `#2DD4BF`, Slate). Usado exclusivamente en Modo B. |
-| `src/slt_desktop/recognition_adapter.py` | Implementa el protocolo `RecognitionBackend`, coordinando extracción 106-D, clasificación k-NN y confirmación de quórum temporal. |
-| `src/slt_desktop/translation_adapter.py` | Conecta con el motor lingüístico `BilingualTranslator` produciendo oraciones naturales en español e inglés. |
-| `src/slt_desktop/vision_worker.py` | Hilo de trabajo (`QThread`) para captura continua (cámara o archivo) sin bloquear la interfaz gráfica. Emite `QImage` y telemetría. |
-| `src/slt_desktop/subtitles.py` | Formateo estricto de subtítulos SubRip `.srt` (índices 1-based, marcas de tiempo `HH:MM:SS,mmm`) y reportes estructurados de transcripción `.txt`. |
-| `src/slt_desktop/theme.py` | Estilos oscuros (`DARK_THEME`), tipografía de alta legibilidad y jerarquía visual profesional. |
-| `src/slt_desktop/main_window.py` | Ventana principal que unifica los 4 pilares en una experiencia minimalista y accesible. |
-| `src/slt/recognition.py` | Núcleo matemático de extracción 106-D, clasificador k-NN, rechazo de gestos desconocidos y métricas de evaluación. |
-| `src/slt/language.py` | Semántica intermedia (`SemanticFrame`), manejo de sujeto pro-drop en español, pronombres explícitos en inglés y deletreo dactilológico. |
-| `src/slt/speech.py` | Hilo de síntesis de voz con despacho COM SAPI5 desacoplado. |
-| `app.py` | Punto de entrada principal que inicializa `slt_desktop.main_window.main()`. |
+El núcleo (`slt_core`) es una biblioteca pura de Python independiente de interfaces gráficas y de modelos pesados en tiempo de ejecución. Centraliza los contratos de datos inmutables, la gestión de perfiles lingüísticos, el buffer de frases y el orquestador principal del pipeline (`CorePipeline`).
 
 ---
 
-## 4. Invarianza Matemática y Percepción Robusta
+## 3. Perception Interface (`PerceptionBackend`)
 
-- **Vector de 106 dimensiones:**
-  - 63 coordenadas normalizadas centrando la muñeca en $(0,0,0)$ en 64 bits y escalando por la longitud palmar hacia el nudillo central ($L_9$).
-  - 15 ángulos de flexión articular en radianes.
-  - 10 distancias interdigitales entre las 5 puntas de los dedos.
-  - 5 distancias punta-muñeca.
-  - 3 componentes del vector normal al plano palmar.
-  - 10 aperturas digitales relativas.
-  - **Invarianza matemática probada:** Total ante traslación 3D, escala métrica y rotación en perspectiva.
+Define el protocolo que cualquier motor de visión (MediaPipe Tasks, OpenPose, o backends propios) debe satisfacer:
+- Propiedad `ready: bool`
+- Método `detect(packet: FramePacket) -> PerceptionFrame`
+- Método `close() -> None`
+
+Entrega `PerceptionFrame` con las 21 coordenadas 3D de cada mano, lateralidad (`LEFT`, `RIGHT`, `UNKNOWN`) y scores de detección.
+
+---
+
+## 4. Recognition Interface (`RecognitionBackend`)
+
+Evalúa las observaciones anatómicas del fotograma actual frente al espacio geométrico o latente del perfil lingüístico activo:
+- Propiedad `ready: bool`
+- Método `predict(frame: PerceptionFrame, profile: LanguageProfile) -> tuple[RecognitionHypothesis, ...]`
+- Método `close() -> None`
+
+Emite tuplas de `RecognitionHypothesis` conteniendo candidatos de glosas y sus correspondientes valores de confianza y semántica (`CALIBRATED_PROBABILITY`, `UNCALIBRATED_SCORE`, `DISTANCE`).
+
+---
+
+## 5. Temporal Decoder (`TemporalDecoder`)
+
+Componente independiente encargado de transformar hipótesis cuadro a cuadro en eventos discretos y estables de señas:
+- Segmenta el inicio (`start_ns`) y fin (`end_ns`) de cada seña.
+- Filtra movimientos de transición (epéntesis gestual) mediante quórum temporal e histéresis.
+- Emite instancias de `SignEvent`.
+
+---
+
+## 6. Language Profiles (`LanguageProfile` & `ProfileRegistry`)
+
+Gestiona la soberanía lingüística de cada lengua de señas:
+- Registro estricto mediante `manifest.json`.
+- Validación de identificadores alfanuméricos seguros contra path traversal.
+- Verificación de presencia de artefactos (`artifacts_present`).
+- Declaración explícita de capacidades cinemáticas (`static_signs`, `dynamic_signs`, `two_hand_signs`, etc.).
+- Asociación con locales de salida válidos (ej. `es-CO`, `en-US`).
+
+---
+
+## 7. Translation Interface (`TranslationBackend`)
+
+Transforma la secuencia cronológica de señas en oraciones coherentes y naturales:
+- Recibe las señas de `PhraseBuffer`, el perfil activo y los locales solicitados.
+- Realiza el mapeo semántico intermedio y genera realizaciones gramaticales para cada idioma de salida.
+- Emite tuplas de `TranslationOutput`.
+
+---
+
+## 8. Phrase Buffer (`PhraseBuffer`)
+
+Mantiene la memoria a corto plazo del enunciado en curso:
+- Almacena secuencias de `SignEvent` asegurando orden temporal monótono.
+- Previene la inserción de eventos duplicados mediante control por `event_id`.
+- Impide la mezcla de eventos pertenecientes a diferentes lenguas de señas.
+- Proporciona operaciones de corrección (`undo`) y limpieza (`clear`).
+
+---
+
+## 9. Frame Sources (`FrameSource`)
+
+Abstracción que unifica cualquier origen de fotogramas:
+- `CameraSource`: Cámara web en vivo (reloj monótono del sistema).
+- `VideoFileSource`: Archivo de video local (Presentation Timestamps $PTS \times time\_base$).
+- Ambas fuentes producen el mismo contrato estándar: `FramePacket`.
+
+---
+
+## 10. Timestamp Management
+
+- Cada fuente mantiene su propio dominio temporal independiente expresado en nanosegundos enteros (`int`).
+- Se imponen comprobaciones estrictas en `CorePipeline`: tanto el índice de fotograma (`frame_index`) como el timestamp (`timestamp_ns`) deben ser estrictamente crecientes por cada `source_id`.
+
+---
+
+## 11. Cross-platform Abstraction
+
+Aislamiento de particularidades de sistema operativo en `src/slt/platform/`:
+- Detección de capacidades de aceleración de hardware.
+- Selección automática de backends de cámara (DirectShow/MSMF en Windows, V4L2 en Linux, AVFoundation en macOS).
+- Selección de síntesis de voz (SAPI5 en Windows, `say`/NSSpeechSynthesizer en macOS, `espeak-ng` en Linux).
+
+---
+
+## 12. Error Handling (`src/slt_core/errors.py`)
+
+Jerarquía estructurada de excepciones:
+- `SLTError`: Excepción raíz de la plataforma.
+- `ValidationError`: Violaciones en contratos de datos o parámetros.
+- `ProfileError` / `ProfileManifestError`: Problemas en perfiles lingüísticos o manifiestos.
+- `ComponentNotReadyError`: Intentos de procesamiento con componentes no inicializados.
+- `ComponentContractError`: Respuestas de componentes que violan contratos.
+- `TimestampOrderError` / `EventOrderError`: Deriva o regresión temporal en fotogramas o eventos.
+
+---
+
+## 13. Resource Lifecycle
+
+Todos los motores (`PerceptionBackend`, `RecognitionBackend`, `TemporalDecoder`, `TranslationBackend`, `FrameSource`, `SpeechBackend`) implementan un método explícito `close()`. El `CorePipeline.close()` garantiza la liberación secuencial y segura de recursos sin fugas de memoria ni hilos huérfanos.
+
+---
+
+## 14. Extension Points
+
+El diseño permite incorporar con cero modificaciones al núcleo:
+1. Nuevas lenguas de señas agregando carpetas en `profiles/sign_languages/`.
+2. Nuevos idiomas de salida añadiendo realizadores en el backend de traducción.
+3. Nuevos modelos de visión artificial (MediaPipe, YOLO-Hands, modelos ONNX).
+4. Nuevos decodificadores temporales (HMMs, redes recurrentes, Transformers temporales).
+
+---
+
+## 15. Recorrido de un Evento (Sequence Diagram)
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Usuario
+    participant Source as FrameSource
+    participant Core as CorePipeline
+    participant Percept as PerceptionBackend
+    participant Recog as RecognitionBackend
+    participant Decod as TemporalDecoder
+    participant Buffer as PhraseBuffer
+    participant Trans as TranslationBackend
+
+    Usuario->>Source: Ejecuta seña ante cámara
+    Source->>Core: process_frame(FramePacket)
+    Core->>Core: Valida timestamp_ns y frame_index
+    Core->>Percept: detect(FramePacket)
+    Percept-->>Core: PerceptionFrame (21 landmarks 3D)
+    Core->>Recog: predict(PerceptionFrame, Profile)
+    Recog-->>Core: tuple[RecognitionHypothesis]
+    Core->>Decod: decode(RecognitionHypothesis, timestamp_ns)
+    Decod-->>Core: tuple[SignEvent] (Confirmada)
+    Core->>Core: Valida que end_ns <= timestamp_ns
+    Core->>Buffer: append(SignEvent)
+    Core->>Trans: translate(events, profile, target_locales)
+    Trans-->>Core: tuple[TranslationOutput] (ES, EN)
+    Core-->>Usuario: PipelineFrameResult (Subtítulos + Audio)
+```

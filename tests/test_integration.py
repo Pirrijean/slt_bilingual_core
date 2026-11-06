@@ -1,19 +1,19 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 Integration tests for the complete SLT Bilingual Core pipeline.
 Tests both the modular core engine and the desktop adapter stack end-to-end.
 """
-import pytest
-import numpy as np
 import time
-from slt.recognition import extract_features, SLTClassifier
-from slt.interaction import SLTInteractionEngine, InteractionState
+
+import numpy as np
+
+from slt.interaction import SLTInteractionEngine
 from slt.language import BilingualTranslator
+from slt.recognition import SLTClassifier, extract_features
 from slt_desktop.hand_landmarker import HandObservation
 from slt_desktop.recognition_adapter import build_recognition_backend
-from slt_desktop.translation_adapter import TranslationAdapter
 from slt_desktop.subtitles import create_srt_content
+from slt_desktop.translation_adapter import TranslationAdapter
 
 
 def test_full_pipeline_flow():
@@ -26,7 +26,7 @@ def test_full_pipeline_flow():
 
     # 2. Classifier
     clf = SLTClassifier()
-    pred, conf, is_valid = clf.predict(features)
+    pred, conf, _is_valid = clf.predict(features)
     assert isinstance(pred, str)
     assert isinstance(conf, float)
 
@@ -39,7 +39,7 @@ def test_full_pipeline_flow():
     interaction.process_frame(has_hands=True, raw_prediction="HOLA", confidence=0.9, is_valid=True)
     interaction.process_frame(has_hands=True, raw_prediction="HOLA", confidence=0.9, is_valid=True)
     time.sleep(0.02)
-    state = interaction.process_frame(has_hands=True, raw_prediction="HOLA", confidence=0.9, is_valid=True)
+    interaction.process_frame(has_hands=True, raw_prediction="HOLA", confidence=0.9, is_valid=True)
 
     assert len(confirmed_events) == 1
     assert confirmed_events[0].label == "HOLA"
