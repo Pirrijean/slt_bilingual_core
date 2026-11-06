@@ -32,7 +32,11 @@ def qapp():
     return app
 
 
-def test_studio_main_window_lifecycle(qapp, tmp_path: Path):
+def test_studio_main_window_lifecycle(qapp, tmp_path: Path, monkeypatch):
+    monkeypatch.setattr("PySide6.QtWidgets.QMessageBox.information", lambda *a, **kw: None)
+    monkeypatch.setattr("PySide6.QtWidgets.QMessageBox.critical", lambda *a, **kw: None)
+    monkeypatch.setattr("PySide6.QtWidgets.QMessageBox.warning", lambda *a, **kw: None)
+
     db_path = tmp_path / "studio_catalog.sqlite3"
     catalog = CorpusCatalog(db_path)
 
@@ -86,5 +90,38 @@ def test_studio_main_window_lifecycle(qapp, tmp_path: Path):
     # Recordings screen check
     window.screen_recordings.refresh()
     assert window.screen_recordings.table.rowCount() == 1
+
+    # Test recordings filter
+    window.screen_recordings._filter_rows("rec_std")
+    assert not window.screen_recordings.table.isRowHidden(0)
+    window.screen_recordings._filter_rows("nonexistent_id")
+    assert window.screen_recordings.table.isRowHidden(0)
+
+    # Participants screen check and add
+    window.screen_participants.refresh()
+    assert window.screen_participants.table.rowCount() == 1
+    window.screen_participants.input_signer_id.setText("signer_new_02")
+    window.screen_participants._add_participant()
+    assert window.screen_participants.table.rowCount() == 2
+
+    # Consent screen check
+    window.screen_consent.refresh()
+    assert window.screen_consent.table.rowCount() == 1
+
+    # Review screen check
+    window.screen_review.refresh()
+    assert window.screen_review.combo_recordings.count() >= 1
+
+    # Builder screen draft generation
+    splits_file = tmp_path / "test_splits.json"
+    window.screen_builder.input_splits_path.setText(str(splits_file))
+    window.screen_builder._generate_splits_draft()
+    assert splits_file.is_file()
+
+    # Splits validator screen check
+    window.screen_splits.refresh()
+    window.screen_splits.input_splits.setText(str(splits_file))
+    window.screen_splits._validate_splits()
+    assert "VALID" in window.screen_splits.output_console.toPlainText()
 
     window.close()

@@ -33,6 +33,10 @@ class SplitValidationScreen(QWidget):
 
         self._build_ui()
 
+    def refresh(self) -> None:
+        """Clear output console on refresh."""
+        self.output_console.clear()
+
     def _build_ui(self) -> None:
         layout = QVBoxLayout(self)
         layout.setContentsMargins(24, 24, 24, 24)
