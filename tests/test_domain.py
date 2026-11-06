@@ -117,6 +117,8 @@ def test_frame_packet_invalid():
 def test_perception_frame_valid_and_invalid():
     pf = PerceptionFrame(source_id="cam", frame_index=1, timestamp_ns=1000)
     assert pf.hands == ()
+    assert pf.faces == ()
+    assert pf.poses == ()
 
     with pytest.raises(ValidationError):
         PerceptionFrame(source_id="", frame_index=0, timestamp_ns=0)
@@ -124,6 +126,41 @@ def test_perception_frame_valid_and_invalid():
         PerceptionFrame(source_id="cam", frame_index=-1, timestamp_ns=0)
     with pytest.raises(ValidationError):
         PerceptionFrame(source_id="cam", frame_index=0, timestamp_ns=-1)
+
+
+def test_multimodal_observations():
+    from slt_core.domain import FaceObservation, PoseLandmark, PoseObservation
+
+    # Face observation
+    face = FaceObservation(
+        tracking_id=1,
+        landmarks=make_landmarks(478),
+        blendshapes=(("jawOpen", 0.75), ("mouthSmileLeft", 0.4)),
+    )
+    assert face.tracking_id == 1
+    assert len(face.landmarks) == 478
+    assert len(face.blendshapes) == 2
+
+    # Negative face tracking id raises ValidationError
+    with pytest.raises(ValidationError, match="tracking_id"):
+        FaceObservation(tracking_id=-1, landmarks=make_landmarks(478))
+
+    # Pose landmarks and observation
+    plm = PoseLandmark(x=0.5, y=0.5, z=0.1, visibility=0.99, presence=0.98)
+    assert plm.visibility == 0.99
+    assert plm.presence == 0.98
+
+    pose = PoseObservation(
+        tracking_id=1,
+        landmarks=(plm,) * 33,
+        world_landmarks=(plm,) * 33,
+    )
+    assert len(pose.landmarks) == 33
+    assert len(pose.world_landmarks) == 33
+
+    # Negative pose tracking id raises ValidationError
+    with pytest.raises(ValidationError, match="tracking_id"):
+        PoseObservation(tracking_id=-5, landmarks=(plm,))
 
 
 def test_recognition_hypothesis_semantics():

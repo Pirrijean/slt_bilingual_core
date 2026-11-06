@@ -2,6 +2,7 @@
 __version__ = "0.1.0"
 
 from slt_core.domain import (
+    FaceObservation,
     FramePacket,
     Handedness,
     HandObservation,
@@ -9,6 +10,8 @@ from slt_core.domain import (
     LanguageProfile,
     PerceptionFrame,
     PipelineFrameResult,
+    PoseLandmark,
+    PoseObservation,
     RecognitionHypothesis,
     ScoreSemantics,
     SignEvent,
@@ -18,6 +21,7 @@ from slt_core.pipeline import CorePipeline
 
 __all__ = [
     "CorePipeline",
+    "FaceObservation",
     "FramePacket",
     "HandObservation",
     "Handedness",
@@ -25,6 +29,8 @@ __all__ = [
     "LanguageProfile",
     "PerceptionFrame",
     "PipelineFrameResult",
+    "PoseLandmark",
+    "PoseObservation",
     "RecognitionHypothesis",
     "ScoreSemantics",
     "SignEvent",

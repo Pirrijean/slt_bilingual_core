@@ -138,3 +138,17 @@ def test_reset_clears_tracks():
     # After reset, can accept frame_index=0 again and restarts ID numbering at 1
     t0 = tracker.update(frame_index=0, observations=[h])
     assert t0[0].tracking_id == 1
+
+
+def test_tracking_aspect_ratio_weighting():
+    # In 16:9, dx=0.2 is scaled by 16/9 (~1.778) -> ~0.3556, which exceeds max_distance=0.30
+    widescreen_tracker = HandTracker(max_distance=0.30, aspect_ratio=16.0 / 9.0)
+    h0 = make_hand(x=0.4, side=Handedness.RIGHT)
+    t0 = widescreen_tracker.update(frame_index=0, observations=[h0])
+    orig_id = t0[0].tracking_id
+
+    # Hand moves dx=0.2 in x, dy=0. In 1:1, distance=0.20 <= 0.30.
+    # In 16:9, distance = 0.2 * 1.778 = 0.3556 > 0.30 -> gets NEW ID due to aspect ratio penalty
+    h1 = make_hand(x=0.6, side=Handedness.RIGHT)
+    t1 = widescreen_tracker.update(frame_index=1, observations=[h1])
+    assert t1[0].tracking_id != orig_id

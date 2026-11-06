@@ -110,6 +110,7 @@ class MediaPipeHandPerception:
         self._landmarker: Any | None = None
         self._mp: Any | None = None
         self._last_timestamp_ms: int = -1
+        self._forced_timestamp_increments: int = 0
 
         self._initialize_landmarker()
 
@@ -140,6 +141,11 @@ class MediaPipeHandPerception:
         """True if the MediaPipe landmarker is active and initialized."""
         return self._landmarker is not None
 
+    @property
+    def forced_timestamp_increments(self) -> int:
+        """Total count of millisecond adjustments forced to maintain C++ monotony."""
+        return self._forced_timestamp_increments
+
     def detect(self, packet: FramePacket) -> PerceptionFrame:
         """
         Process a FramePacket, detect hands with MediaPipe Hand Landmarker,
@@ -165,6 +171,7 @@ class MediaPipeHandPerception:
         timestamp_ms = packet.timestamp_ns // 1_000_000
         if timestamp_ms <= self._last_timestamp_ms:
             timestamp_ms = self._last_timestamp_ms + 1
+            self._forced_timestamp_increments += 1
         self._last_timestamp_ms = timestamp_ms
 
         # 4. Invoke MediaPipe Hand Landmarker in VIDEO mode
@@ -195,3 +202,4 @@ class MediaPipeHandPerception:
         self.tracker.reset()
         self._bound_source_id = None
         self._last_timestamp_ms = -1
+        self._forced_timestamp_increments = 0

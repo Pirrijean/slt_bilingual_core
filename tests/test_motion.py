@@ -58,6 +58,10 @@ def test_motion_second_frame_velocity_and_speed():
     assert m.velocity_x == pytest.approx(1.0)
     assert m.velocity_y == pytest.approx(0.0)
     assert m.speed == pytest.approx(1.0)
+    assert len(m.joint_velocities) > 0
+    joint_dict = {name: (vx, vy) for name, vx, vy in m.joint_velocities}
+    assert "wrist" in joint_dict
+    assert joint_dict["wrist"][0] == pytest.approx(1.0)
 
 
 def test_motion_gap_exceeds_max_delta():

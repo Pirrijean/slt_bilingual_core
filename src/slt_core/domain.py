@@ -93,12 +93,58 @@ class FramePacket:
 
 
 @dataclass(frozen=True, slots=True)
+class FaceObservation:
+    """Anatomical observation of a detected face."""
+    tracking_id: int | None
+    landmarks: tuple[Landmark, ...]
+    blendshapes: tuple[tuple[str, float], ...] = ()
+    transformation_matrix: tuple[float, ...] | None = None
+
+    def __post_init__(self) -> None:
+        if self.tracking_id is not None and self.tracking_id < 0:
+            raise ValidationError("tracking_id cannot be negative.")
+
+
+@dataclass(frozen=True, slots=True)
+class PoseLandmark:
+    """3D Pose landmark with optional visibility and presence scores."""
+    x: float
+    y: float
+    z: float
+    visibility: float | None = None
+    presence: float | None = None
+
+    def __post_init__(self) -> None:
+        for val in (self.x, self.y, self.z):
+            if not isfinite(val):
+                raise ValidationError("PoseLandmark coordinates must be finite.")
+        if self.visibility is not None and not isfinite(self.visibility):
+            raise ValidationError("PoseLandmark visibility must be finite.")
+        if self.presence is not None and not isfinite(self.presence):
+            raise ValidationError("PoseLandmark presence must be finite.")
+
+
+@dataclass(frozen=True, slots=True)
+class PoseObservation:
+    """Anatomical observation of a detected human pose (body skeleton)."""
+    tracking_id: int | None
+    landmarks: tuple[PoseLandmark, ...]
+    world_landmarks: tuple[PoseLandmark, ...] = ()
+
+    def __post_init__(self) -> None:
+        if self.tracking_id is not None and self.tracking_id < 0:
+            raise ValidationError("tracking_id cannot be negative.")
+
+
+@dataclass(frozen=True, slots=True)
 class PerceptionFrame:
-    """Anatomical perception result for a frame packet."""
+    """Anatomical perception result for a frame packet across all modalities."""
     source_id: str
     frame_index: int
     timestamp_ns: int
     hands: tuple[HandObservation, ...] = ()
+    faces: tuple[FaceObservation, ...] = ()
+    poses: tuple[PoseObservation, ...] = ()
 
     def __post_init__(self) -> None:
         if not self.source_id.strip():

@@ -29,10 +29,12 @@ class HandTracker:
         max_distance: float = 0.30,
         handedness_penalty: float = 0.10,
         max_missed_frames: int = 12,
+        aspect_ratio: float = 1.0,
     ) -> None:
         self.max_distance = max_distance
         self.handedness_penalty = handedness_penalty
         self.max_missed_frames = max_missed_frames
+        self.aspect_ratio = aspect_ratio
 
         self._next_id = 1
         self._tracks: dict[int, _Track] = {}
@@ -85,7 +87,9 @@ class HandTracker:
                 obs = observations[obs_idx]
                 for tid in track_ids:
                     track = self._tracks[tid]
-                    dist = hypot(track.center_x - cx, track.center_y - cy)
+                    dx = (track.center_x - cx) * self.aspect_ratio
+                    dy = track.center_y - cy
+                    dist = hypot(dx, dy)
                     penalty = 0.0
                     if (
                         track.handedness != Handedness.UNKNOWN

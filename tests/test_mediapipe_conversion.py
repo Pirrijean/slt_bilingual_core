@@ -139,6 +139,19 @@ def test_mediapipe_hand_perception_end_to_end_if_available():
     assert result.frame_index == 0
     assert result.timestamp_ns == 1_000_000
     assert isinstance(result.hands, tuple)
+    assert perception_engine.forced_timestamp_increments == 0
+
+    # Feed second frame with identical millisecond timestamp (1_500_000 ns -> 1 ms)
+    # MediaPipe receives 1 ms again, forcing a +1 ms increment to satisfy C++ monotonicity
+    packet2 = FramePacket(
+        source_id="test_cam",
+        frame_index=1,
+        timestamp_ns=1_500_000,
+        image=np.zeros((100, 100, 3), dtype=np.uint8),
+    )
+    result2 = perception_engine.detect(packet2)
+    assert result2.frame_index == 1
+    assert perception_engine.forced_timestamp_increments == 1
 
     perception_engine.close()
     assert perception_engine.ready is False
