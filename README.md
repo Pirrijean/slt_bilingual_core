@@ -10,169 +10,158 @@
 
 ---
 
-## 1. Principio Rector e Identidad
+## 1. Principio Rector y los 4 Pilares
 
 **SLT Bilingual Core** no es un prototipo experimental ni un envoltorio genérico de librerías. Es un producto tecnológico propio diseñado para la comunicación fluida y accesible entre personas sordas o con dificultades del habla y oyentes.
 
-Diferenciamos explícitamente cuatro niveles en nuestra arquitectura:
-1. **Tecnologías de Terceros:** Aprovechamos herramientas maduras y robustas: MediaPipe (percepción anatómica), OpenCV (captura y procesamiento de imagen), PySide6 (interfaz de escritorio) y NumPy (cálculo matricial numérico).
-2. **Métodos Científicos:** Estudiamos fundamentos de HMI y visión artificial, adaptando conceptos como las transiciones de estado e histéresis del estudio *AutoNav* ([Scientific Reports 2024](https://doi.org/10.1038/s41598-024-80898-x), CC BY 4.0) a eventos lingüísticos discretos.
-3. **Implementación Propia:** Escribimos nuestro propio extractor geométrico 106-D invariante, nuestra máquina de estados finitos (`InteractionState` y `SignEvent`), nuestro motor de representación semántica (`SemanticFrame`), realizadores gramaticales bilingües deterministas y motor de voz asíncrono en Windows SAPI5.
-4. **Identidad del Producto (Communication Workspace):** Una experiencia de usuario centrada en la conversación humana, con una paleta sobria (*Graphite #101820*, *Slate #1B303B*, *Teal #42BFB0*, *Mist #ECF2F3*), un **Sign Timeline** interactivo y telemetría técnica discreta inspirada en *Cleanmeter*.
+El desarrollo se articula sobre **cuatro pilares inmutables**:
+
+1. **Reconocimiento e Interacción Visual en Tiempo Real:**
+   - Reconocimiento activo en segundo plano en todo momento.
+   - **Modo A (Pantalla Limpia - Predeterminada):** Muestra el flujo de video original sin esqueletos ni marcadores superpuestos, priorizando una interacción natural y digna.
+   - **Modo B (Modo Demostración):** Interruptor independiente que superpone la anatomía de las manos en Teal `#42BFB0`, articulaciones anti-aliased y badges de lateralidad.
+2. **Traducción y Subtítulos Bilingües Simultáneos:**
+   - Subtítulos de gran tamaño y legibilidad simultáneos en español e inglés.
+   - Botón directo "Copiar traducción" al portapapeles.
+   - Tira de historial cronológico con funciones "Deshacer" y "Limpiar".
+   - Soporte para procesamiento de archivos de video locales (MP4, AVI, MOV) con exportación a subtítulos estándar `.srt` y reportes `.txt`.
+3. **Comunicación Mediante Síntesis de Voz:**
+   - Motor de voz multihilo no bloqueante mediante SAPI5 COM en Windows (`Helena` para español, `Zira` para inglés).
+   - Selector de idioma de voz (Español, English, Ambos) y modo de voz automática opcional.
+4. **Monitorización del Rendimiento (Cleanmeter Discreto):**
+   - Telemetría en vivo: FPS, latencia de percepción en milisegundos, manos detectadas y estado del motor.
+   - En procesamiento de video: barra de progreso, FPS de procesamiento y cálculo de tiempo restante (ETA).
 
 ---
 
-## 2. Arquitectura Compacta y Desacoplada
+## 2. Estructura del Proyecto
 
 ```text
 slt_bilingual_core/
-├── app.py                     # Punto de entrada de la aplicación
+├── app.py                     # Punto de entrada de la aplicación de escritorio
 ├── src/
-│   └── slt/
-│       ├── application.py     # Orquestación de ciclo de vida y señales
-│       ├── capture.py         # Captura de video multihilo (OpenCV)
-│       ├── perception.py      # Percepción anatómica y renderizado (MediaPipe Tasks)
-│       ├── recognition.py     # Protocolo SignRecognizer, extractor 106-D y clasificador k-NN
-│       ├── interaction.py     # Motor de interacción temporal, SignEvent y Sign Timeline
-│       ├── language.py        # SemanticFrame, lexicón semántico versionado y realizadores ES/EN
-│       ├── speech.py          # Síntesis de voz multihilo no bloqueante (SAPI5 nativo)
-│       ├── ui/
-│       │   ├── main_window.py # Ventana principal del Communication Workspace
-│       │   ├── components.py  # PerceptionStage, SignTimelineWidget, SubtitlesCard, DiagnosticsBar
-│       │   └── theme.py       # Paleta y hoja de estilos Qt (QSS)
-│       └── utils/             # Rutas maestras y configuración de logging
+│   ├── slt_desktop/           # Capa de escritorio desacoplada (PySide6)
+│   │   ├── hand_landmarker.py # MediaPipe HandLandmarker (RunningMode.VIDEO)
+│   │   ├── drawing.py         # Visualización anatómica limpia (Modo B)
+│   │   ├── vision_worker.py   # Hilo de captura QThread (Cámara / Video)
+│   │   ├── recognition_adapter.py # Adaptador de clasificación 106-D + FSM
+│   │   ├── translation_adapter.py # Adaptador lingüístico simultáneo (ES/EN)
+│   │   ├── subtitles.py       # Generador y exportador de subtítulos SRT y TXT
+│   │   ├── theme.py           # Tema oscuro minimalista y paleta de diseño
+│   │   └── main_window.py     # Ventana principal del traductor de escritorio
+│   └── slt/                   # Núcleo modular algorítmico
+│       ├── recognition.py     # Extractor geométrico 106-D y clasificador k-NN
+│       ├── interaction.py     # Máquina de estados finitos y SignEvent
+│       ├── language.py        # SemanticFrame, lexicón bilingüe y realizadores
+│       └── speech.py          # Síntesis de voz multihilo con COM SAPI5
 ├── config/
-│   ├── lexicon.json           # Lexicón bilingüe estructurado con roles sintácticos y validación
-│   ├── classes.json           # Registro oficial de las 19 clases soportadas
-│   └── settings.json          # Configuración de hardware y parámetros de quórum
+│   ├── lexicon.json           # Lexicón semántico bilingüe con 18 palabras léxicas
+│   ├── classes.json           # 19 clases oficiales reconocidas
+│   └── settings.json          # Parámetros de quórum y configuración de hardware
 ├── docs/
-│   ├── ARCHITECTURE.md        # Especificación maestra de la arquitectura
-│   ├── INTERACTION_SPEC.md    # Especificación de máquina de estados y eventos temporales
-│   ├── RECOGNITION_SPEC.md    # Protocolo SignRecognizer y 3 representaciones geométricas
-│   ├── LANGUAGE_SPEC.md       # SemanticFrame y reglas de realización bilingüe
-│   ├── UI_UX_SPEC.md          # Especificación del sistema de diseño y Sign Timeline
-│   ├── RESEARCH_LOG.md        # Registro cronológico de investigación científica
-│   ├── TECHNOLOGY_PROVENANCE.md # Matriz de procedencia y propiedad intelectual
-│   ├── LICENSES.md            # Registro de licencias de código abierto
-│   └── DATASET.md             # Protocolo de adquisición y partición por participantes
-├── scripts/
-│   ├── capture.py             # Herramienta de captura interactiva de señas
-│   ├── train.py               # Entrenamiento y empaquetado del modelo (slt_model.npz)
-│   └── evaluate.py            # Evaluación con matriz de confusión y latencia
+│   ├── CURRENT_STATE_REPORT.md# Informe técnico de auditoría y compatibilidad (Fase 0)
+│   ├── ARCHITECTURE.md        # Especificación arquitectónica y los 4 pilares
+│   ├── VALIDATION.md          # Reporte de validación con 33 pruebas automatizadas
+│   ├── LICENSES.md            # Licencias de dependencias y atribuciones
+│   └── DATASET.md             # Protocolo de adquisición de datos
+├── models/
+│   ├── hand_landmarker.task   # Modelo oficial MediaPipe Tasks Hand Landmarker
+│   └── slt_model.npz          # Prototipos entrenados y parámetros de normalización
 └── tests/
-    ├── test_recognition.py    # Pruebas de extracción 106-D, invariancia y clasificador
-    ├── test_interaction.py    # Pruebas de FSM, quórum, anti-rebote y timeline
-    ├── test_language.py       # Pruebas de SemanticFrame, gramática SVO y dactilología
-    ├── test_integration.py    # Flujo integral de extremo a extremo
-    └── test_audio.py          # Pruebas del motor de síntesis de voz multihilo
+    ├── test_hand_landmarker.py# Pruebas del detector anatómico en modo VIDEO
+    ├── test_drawing.py        # Pruebas de renderizado de esqueletos (Modo B)
+    ├── test_subtitles.py      # Pruebas de generación y exportación SRT y TXT
+    ├── test_desktop_adapters.py # Pruebas de contratos de los adaptadores
+    ├── test_ui.py             # Pruebas del ciclo de vida y eventos de la GUI
+    ├── test_recognition.py    # Pruebas de extracción 106-D e invariancia
+    ├── test_interaction.py    # Pruebas de máquina de estados finitos
+    ├── test_language.py       # Pruebas del motor lingüístico bilingüe
+    ├── test_audio.py          # Pruebas de síntesis de voz asíncrona
+    └── test_integration.py    # Pruebas integrales de flujo completo
 ```
 
 ---
 
-## 3. Especificaciones de Ingeniería y Documentación Técnica
+## 3. Vocabulario Oficial Soportado (19 Clases)
 
-Para garantizar un desarrollo transparente, reproducible y riguroso, el repositorio incluye 5 contratos de diseño e ingeniería:
-
-1. [**Architecture Blueprint**](docs/ARCHITECTURE.md): Comunicación desacoplada entre capas y flujo de eventos.
-2. [**SLT Interaction Specification**](docs/INTERACTION_SPEC.md): Máquina de 5 estados (`IDLE`, `TRACKING`, `CANDIDATE`, `CONFIRMED`, `WAITING_RELEASE`) y contrato `SignEvent`.
-3. [**Recognition Specification**](docs/RECOGNITION_SPEC.md): Protocolo `SignRecognizer`, extracción de 106 características geométricas y rechazo de reposo/desconocidos (`_NADA_`).
-4. [**Language Specification**](docs/LANGUAGE_SPEC.md): Representación intermedia `SemanticFrame`, realizadores gramaticales con pro-drop en español y pronombres explícitos en inglés.
-5. [**UI/UX Specification**](docs/UI_UX_SPEC.md): Niveles de interacción (Comunicación, Asistencia, Diagnóstico), sistema de diseño y Sign Timeline.
-
-Documentación de atribución, licencias y reproducibilidad:
-- [**Technology Provenance & IP Matrix**](docs/TECHNOLOGY_PROVENANCE.md): Qué tomamos de terceros y qué desarrollamos nosotros.
-- [**Research Log**](docs/RESEARCH_LOG.md): Fundamentos científicos y referencias analizadas (AutoNav, OpusClip, Spinex, Cleanmeter).
-- [**Dataset Specification**](docs/DATASET.md): Estructura del dataset y partición estratificada por participantes.
-- [**Licenses**](docs/LICENSES.md): Licencias aplicables (MIT, Apache 2.0, LGPL v3, CC BY 4.0).
-
----
-
-## 4. Vocabulario Soportado (19 Clases)
-
-| ID | Glosa | Categoría | Rol Sintáctico | Salida Español (Texto y Voz) | Salida Inglés (Text & Speech) |
+| ID | Glosa | Categoría | Rol Sintáctico | Salida Español | Salida Inglés |
 | :---: | :--- | :--- | :--- | :--- | :--- |
-| **0** | `_NADA_` | Estado | Rejection | *(Reposo / Sin seña activa)* | *(Rest / No active sign)* |
-| **1** | `HOLA` | Cortesía | Discourse | ¡Hola! | Hello! |
-| **2** | `GRACIAS` | Cortesía | Politeness | Muchas gracias. | Thank you very much. |
-| **3** | `POR_FAVOR` | Cortesía | Politeness | Por favor. | Please. |
-| **4** | `SI` | Respuestas | Discourse | Sí. | Yes. |
-| **5** | `NO` | Respuestas | Discourse | No. | No. |
-| **6** | `AYUDA` | Necesidades | Object/Verb | ¡Necesito ayuda! | I need help! |
-| **7** | `AGUA` | Necesidades | Object | Agua, por favor. | Water, please. |
-| **8** | `COMIDA` | Necesidades | Object | Comida, por favor. | Food, please. |
-| **9** | `ESTAR_BIEN` | Respuestas | Predicate | Estoy bien. | I am fine. |
-| **10** | `TE_QUIERO` | Expresiones | Predicate | Te quiero. | I love you. |
-| **11** | `YO` | Gramática | Subject (1P) | yo (Soy yo.) | I (It is me.) |
-| **12** | `TU` | Gramática | Subject (2P) | tú (¿Y tú?) | you (And you?) |
-| **13** | `QUERER` | Gramática | Verb | quiero / quieres | want / wants |
-| **14** | `A` | Dactilológico | Character | Letra A (ensamble dactilológico) | Letter A (fingerspelling) |
-| **15** | `E` | Dactilológico | Character | Letra E (ensamble dactilológico) | Letter E (fingerspelling) |
-| **16** | `I` | Dactilológico | Character | Letra I (ensamble dactilológico) | Letter I (fingerspelling) |
-| **17** | `O` | Dactilológico | Character | Letra O (ensamble dactilológico) | Letter O (fingerspelling) |
-| **18** | `U` | Dactilológico | Character | Letra U (ensamble dactilológico) | Letter U (fingerspelling) |
+| **0** | `_NADA_` | Control | Rejection | *(Reposo / Sin seña activa)* | *(Rest / No active sign)* |
+| **1** | `HOLA` | Cortesía | Saludo | ¡Hola! | Hello! |
+| **2** | `GRACIAS` | Cortesía | Agradecimiento | Muchas gracias. | Thank you very much. |
+| **3** | `POR_FAVOR` | Cortesía | Petición | Por favor. | Please. |
+| **4** | `SI` | Respuestas | Afirmación | Sí. | Yes. |
+| **5** | `NO` | Respuestas | Negación | No. | No. |
+| **6** | `AYUDA` | Necesidades | Emergencia | ¡Necesito ayuda! | I need help! |
+| **7** | `AGUA` | Necesidades | Sustantivo | Agua, por favor. | Water, please. |
+| **8** | `COMIDA` | Necesidades | Sustantivo | Comida, por favor. | Food, please. |
+| **9** | `ESTAR_BIEN` | Respuestas | Predicado | Estoy bien. | I am fine. |
+| **10** | `TE_QUIERO` | Expresiones | Predicado | Te quiero. | I love you. |
+| **11** | `YO` | Gramática | Sujeto (1P) | yo (Soy yo.) | I (It is me.) |
+| **12** | `TU` | Gramática | Sujeto (2P) | tú (¿Y tú?) | you (And you?) |
+| **13** | `QUERER` | Gramática | Verbo | quiero / quieres | want / wants |
+| **14** | `A` | Dactilológico | Carácter | Letra A | Letter A |
+| **15** | `E` | Dactilológico | Carácter | Letra E | Letter E |
+| **16** | `I` | Dactilológico | Carácter | Letra I | Letter I |
+| **17** | `O` | Dactilológico | Carácter | Letra O | Letter O |
+| **18** | `U` | Dactilológico | Carácter | Letra U | Letter U |
 
 ---
 
-## 5. Instalación y Ejecución
+## 4. Instalación y Ejecución
 
 ### Requisitos Previos
-- Windows 10/11 (64-bit)
-- Python 3.12 (arquitectura x64)
-- Cámara web integrada o USB
+- Windows 10 u 11 (64-bit)
+- Python 3.12 (recomendado en entorno virtual `.venv`)
+- Cámara web integrada o USB (para modo en vivo)
 
 ### Instalación Rápida
-Ejecuta el script automatizado en la raíz del proyecto:
-```cmd
-install.bat
-```
-
-O instala manualmente en tu entorno virtual:
 ```bash
 python -m venv .venv
-source .venv/Scripts/activate  # En Linux: source .venv/bin/activate
+.venv\Scripts\activate
 pip install -r requirements.txt
 pip install -e .
 ```
 
-### Ejecutar la Aplicación
+### Iniciar la Aplicación de Escritorio
 ```bash
 python app.py
 ```
-O mediante el comando CLI registrado:
+O directamente con el comando de consola registrado:
 ```bash
-slt
+slt-desktop
 ```
 
 ---
 
-## 6. Atajos de Teclado del Workspace
+## 5. Atajos de Teclado del Workspace
 
-| Tecla / Atajo | Acción | Descripción |
+| Atajo | Acción | Descripción |
 | :--- | :--- | :--- |
-| `Espacio` | **Pronunciar Frase** | Sintetiza en voz alta la traducción actual en el idioma seleccionado. |
-| `Backspace` | **Deshacer Última Seña** | Elimina la última glosa registrada del buffer y actualiza la traducción. |
-| `Ctrl + L` | **Limpiar Frase** | Vacía completamente el Sign Timeline y reinicia las tarjetas de traducción. |
-| `F1` | **Guía de Señas** | Abre o cierra el cajón lateral con la descripción postural de las 19 señas. |
-| `Ctrl + Q` | **Salir** | Cierra de manera limpia y segura todos los hilos de cámara y audio. |
+| `Espacio` | **Pronunciar** | Vocaliza la traducción actual usando la voz seleccionada (ES, EN o ambos). |
+| `Ctrl + C` | **Copiar traducción** | Copia ambas oraciones traducidas al portapapeles del sistema. |
+| `Ctrl + Z` | **Deshacer seña** | Elimina la última seña confirmada de la secuencia y actualiza la traducción. |
+| `Escape` | **Limpiar todo** | Reinicia el buffer de señas, el timeline y las oraciones en pantalla. |
 
 ---
 
-## 7. Pruebas Automatizadas
+## 6. Pruebas Automatizadas
 
-La suite de pruebas automatizadas valida unitaria e integralmente todos los subsistemas del proyecto:
+Para ejecutar la suite de 33 pruebas automatizadas con verificación unitaria y de integración:
 
 ```bash
 pytest -v
 ```
 
-Todas las 18 pruebas se ejecutan en < 8 segundos con 100% de tasa de éxito:
-- Invarianza matemática exacta a traslación y escala del extractor 106-D.
-- Decodificación temporal y supresión de repeticiones en el motor de interacción.
-- Validación de esquemas y concordancia bilingüe en el motor lingüístico.
-- Concurrencia multihilo no bloqueante en la síntesis de voz.
+Resultado verificado:
+- **33/33 pruebas superadas (100% de éxito).**
+- Cobertura matemática del extractor 106-D con invarianza exacta ante traslación y escala.
+- Decodificación temporal en la máquina de estados e histéresis anti-rebote.
+- Procesamiento de video offline con marcas de tiempo monótonas y exportación SRT.
+- Concurrencia de audio desacoplada sin bloqueos de interfaz gráfica.
 
 ---
 
-## 8. Licencia y Créditos
+## 7. Licencia
 
-Este proyecto está publicado bajo la licencia **MIT**. Consulta [LICENSES.md](docs/LICENSES.md) para detalles sobre dependencias de terceros y atribuciones científicas (AutoNav CC BY 4.0, MediaPipe Apache 2.0).
+Publicado bajo la licencia **MIT**. Consulta [LICENSES.md](docs/LICENSES.md) para más detalles.
