@@ -18,6 +18,7 @@ from PySide6.QtWidgets import (
 )
 
 from slt_corpus.catalog import CorpusCatalog
+from slt_studio.screens.adjudication import AdjudicationScreen
 from slt_studio.screens.annotations import AnnotationsScreen
 from slt_studio.screens.builder import DatasetBuilderScreen
 from slt_studio.screens.capture import CaptureScreen
@@ -91,9 +92,10 @@ class DatasetStudioMainWindow(QMainWindow):
             ("Recordings", 4),
             ("Review QA", 5),
             ("Annotations", 6),
-            ("Dataset Builder", 7),
-            ("Split Validator", 8),
-            ("Release Manager", 9),
+            ("Adjudication", 7),
+            ("Dataset Builder", 8),
+            ("Split Validator", 9),
+            ("Release Manager", 10),
         ]
 
         self.buttons: list[QPushButton] = []
@@ -149,6 +151,7 @@ class DatasetStudioMainWindow(QMainWindow):
         self.screen_recordings = RecordingsScreen(self.catalog)
         self.screen_review = ReviewScreen(self.catalog)
         self.screen_annotations = AnnotationsScreen(self.catalog)
+        self.screen_adjudication = AdjudicationScreen(self.catalog)
         self.screen_builder = DatasetBuilderScreen(self.catalog)
         self.screen_splits = SplitValidationScreen(self.catalog)
         self.screen_release = ReleaseScreen(self.catalog)
@@ -160,6 +163,7 @@ class DatasetStudioMainWindow(QMainWindow):
         self.stack.addWidget(self.screen_recordings)
         self.stack.addWidget(self.screen_review)
         self.stack.addWidget(self.screen_annotations)
+        self.stack.addWidget(self.screen_adjudication)
         self.stack.addWidget(self.screen_builder)
         self.stack.addWidget(self.screen_splits)
         self.stack.addWidget(self.screen_release)

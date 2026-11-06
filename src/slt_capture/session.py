@@ -34,15 +34,24 @@ class CaptureSessionController:
         signer_id: str,
         protocol: CaptureProtocol,
         operator_id: str,
+        allow_draft_protocol: bool = True,
     ) -> None:
         self.catalog = catalog
         self.session_id = session_id
         self.signer_id = signer_id
         self.protocol = protocol
         self.operator_id = operator_id
+        self.allow_draft_protocol = allow_draft_protocol
         self.state: SessionState = SessionState.CONFIGURED
         self.active_task: ProtocolTask | None = None
         self._consent: ConsentRecord | None = None
+
+        if not self.allow_draft_protocol and self.protocol.status.lower() == "draft":
+            self.state = SessionState.ERROR
+            raise ValueError(
+                f"Cannot capture with draft protocol {self.protocol.protocol_id!r}. "
+                "Protocol must be approved by linguistic and ethics review."
+            )
 
         self._verify_participant_and_consent()
 

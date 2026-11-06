@@ -8,6 +8,7 @@ from collections.abc import Sequence
 from pathlib import Path
 
 from slt_corpus.domain import (
+    AlignmentKind,
     Annotation,
     AnnotationDocument,
     AnnotationStatus,
@@ -96,8 +97,8 @@ CREATE TABLE IF NOT EXISTS annotations (
     annotation_id TEXT PRIMARY KEY,
     document_id TEXT NOT NULL REFERENCES annotation_documents(document_id) ON DELETE CASCADE,
     tier_id TEXT NOT NULL,
-    start_ns INTEGER NOT NULL,
-    end_ns INTEGER NOT NULL,
+    start_ns INTEGER,
+    end_ns INTEGER,
     value TEXT NOT NULL,
     parent_annotation_id TEXT REFERENCES annotations(annotation_id),
     boundary_quality TEXT NOT NULL,
@@ -397,6 +398,13 @@ class CorpusCatalog:
             )
             return [self._row_to_recording(r) for r in cur.fetchall()]
 
+    def update_recording_status(self, recording_id: str, status: RecordingStatus) -> None:
+        with self._connect() as conn:
+            conn.execute(
+                "UPDATE recordings SET status = ? WHERE recording_id = ?",
+                (status.value, recording_id),
+            )
+
     @staticmethod
     def _row_to_recording(row: sqlite3.Row) -> Recording:
         return Recording(
@@ -539,6 +547,48 @@ class CorpusCatalog:
                     annotation_id=r["annotation_id"],
                     document_id=r["document_id"],
                     tier_id=r["tier_id"],
+                    alignment_kind=(
+                        AlignmentKind.TIME_ALIGNED
+                        if (r["start_ns"] is not None and r["end_ns"] is not None)
+                        else AlignmentKind.REFERENCE
+                    ),
+                    start_ns=r["start_ns"],
+                    end_ns=r["end_ns"],
+                    value=r["value"],
+                    parent_annotation_id=r["parent_annotation_id"],
+                    boundary_quality=BoundaryQuality(r["boundary_quality"]),
+                    status=AnnotationStatus(r["status"]),
+                    annotator_id=r["annotator_id"],
+                    revision=r["revision"],
+                )
+                for r in cur.fetchall()
+            ]
+
+    def list_annotations_for_recording(self, recording_id: str) -> list[Annotation]:
+        with self._connect() as conn:
+            cur = conn.execute(
+                """
+                SELECT a.annotation_id, a.document_id, d.recording_id, a.tier_id,
+                       a.start_ns, a.end_ns, a.value, a.parent_annotation_id,
+                       a.boundary_quality, a.status, a.annotator_id, a.revision
+                FROM annotations a
+                JOIN annotation_documents d ON a.document_id = d.document_id
+                WHERE d.recording_id = ?
+                ORDER BY a.tier_id, a.start_ns
+                """,
+                (recording_id,),
+            )
+            return [
+                Annotation(
+                    annotation_id=r["annotation_id"],
+                    document_id=r["document_id"],
+                    recording_id=r["recording_id"],
+                    tier_id=r["tier_id"],
+                    alignment_kind=(
+                        AlignmentKind.TIME_ALIGNED
+                        if (r["start_ns"] is not None and r["end_ns"] is not None)
+                        else AlignmentKind.REFERENCE
+                    ),
                     start_ns=r["start_ns"],
                     end_ns=r["end_ns"],
                     value=r["value"],

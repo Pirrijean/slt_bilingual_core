@@ -1,7 +1,13 @@
-"""SLT Capture Package: Controlled LSC sign acquisition and recording."""
+"""SLT Capture Package: Controlled LSC sign acquisition, timing sidecars, and ingestion."""
 
 from __future__ import annotations
 
+from slt_capture.contracts import (
+    CaptureArtifact,
+    CaptureFrameMetadata,
+    CaptureSessionRequest,
+)
+from slt_capture.ingest_service import CaptureIngestService, IngestError
 from slt_capture.metadata import (
     CameraMetadata,
     EnvironmentMetadata,
@@ -18,10 +24,15 @@ from slt_capture.session import CaptureSessionController, SessionState
 
 __all__ = [
     "CameraMetadata",
+    "CaptureArtifact",
+    "CaptureFrameMetadata",
+    "CaptureIngestService",
     "CaptureProtocol",
     "CaptureRecorder",
     "CaptureSessionController",
+    "CaptureSessionRequest",
     "EnvironmentMetadata",
+    "IngestError",
     "ProtocolError",
     "ProtocolTask",
     "RecorderError",

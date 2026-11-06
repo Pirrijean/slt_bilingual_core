@@ -12,6 +12,11 @@ os.environ["QT_QPA_PLATFORM"] = "offscreen"
 
 from slt_corpus.catalog import CorpusCatalog
 from slt_corpus.domain import (
+    AlignmentKind,
+    Annotation,
+    AnnotationDocument,
+    AnnotationStatus,
+    BoundaryQuality,
     ConsentPurpose,
     ConsentRecord,
     Participant,
@@ -36,11 +41,12 @@ def test_studio_main_window_lifecycle(qapp, tmp_path: Path, monkeypatch):
     monkeypatch.setattr("PySide6.QtWidgets.QMessageBox.information", lambda *a, **kw: None)
     monkeypatch.setattr("PySide6.QtWidgets.QMessageBox.critical", lambda *a, **kw: None)
     monkeypatch.setattr("PySide6.QtWidgets.QMessageBox.warning", lambda *a, **kw: None)
+    monkeypatch.setattr("PySide6.QtWidgets.QMessageBox.question", lambda *a, **kw: pytest.importorskip("PySide6.QtWidgets").QMessageBox.StandardButton.Yes)
 
     db_path = tmp_path / "studio_catalog.sqlite3"
     catalog = CorpusCatalog(db_path)
 
-    # Seed catalog with a participant and recording
+    # Seed catalog with a participant, recording, and annotation document
     catalog.add_participant(
         Participant(signer_id="signer_std", metadata_json="{}", created_at_utc="2026-11-06T10:00:00Z")
     )
@@ -74,12 +80,37 @@ def test_studio_main_window_lifecycle(qapp, tmp_path: Path, monkeypatch):
             status=RecordingStatus.INGESTED,
         )
     )
+    catalog.add_annotation_document(
+        AnnotationDocument(
+            document_id="doc_std",
+            recording_id="rec_std",
+            schema_version="1.0.0",
+            eaf_source_path=None,
+            created_at_utc="2026-11-06T10:00:00Z",
+            status=AnnotationStatus.SUBMITTED,
+        )
+    )
+    catalog.add_annotations([
+        Annotation(
+            annotation_id="ann_std_01",
+            document_id="doc_std",
+            recording_id="rec_std",
+            tier_id="sign_token",
+            alignment_kind=AlignmentKind.TIME_ALIGNED,
+            start_ns=100_000_000,
+            end_ns=800_000_000,
+            value="HOLA_DRAFT",
+            revision=1,
+            status=AnnotationStatus.SUBMITTED,
+            boundary_quality=BoundaryQuality.PRECISE,
+        )
+    ])
 
     window = DatasetStudioMainWindow(db_path=db_path)
-    assert window.stack.count() == 10
+    assert window.stack.count() == 11
 
-    # Test navigation to each screen
-    for i in range(10):
+    # Test navigation to each of the 11 screens
+    for i in range(11):
         window.switch_screen(i)
         assert window.stack.currentIndex() == i
 
@@ -111,6 +142,18 @@ def test_studio_main_window_lifecycle(qapp, tmp_path: Path, monkeypatch):
     # Review screen check
     window.screen_review.refresh()
     assert window.screen_review.combo_recordings.count() >= 1
+
+    # Adjudication screen check
+    window.screen_adjudication.refresh()
+    assert window.screen_adjudication.table.rowCount() == 1
+    # Select row and apply adjudicated decision
+    window.screen_adjudication.table.selectRow(0)
+    window.screen_adjudication.input_value.setText("HOLA_FINAL")
+    window.screen_adjudication._apply_decision()
+    # Check that annotation was updated
+    anns = catalog.list_annotations_for_recording("rec_std")
+    assert anns[0].value == "HOLA_FINAL"
+    assert anns[0].status == AnnotationStatus.ADJUDICATED
 
     # Builder screen draft generation
     splits_file = tmp_path / "test_splits.json"

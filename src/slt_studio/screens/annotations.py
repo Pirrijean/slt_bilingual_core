@@ -106,7 +106,7 @@ class AnnotationsScreen(QWidget):
                 created_at_utc=now_utc,
                 status=AnnotationStatus.DRAFT,
             )
-            annotations = to_slt_annotations(records, document_id=doc_id)
+            annotations = to_slt_annotations(records, document_id=doc_id, recording_id=rec_id)
 
             self.catalog.add_annotation_document(doc)
             self.catalog.add_annotations(annotations)
