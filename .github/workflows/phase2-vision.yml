@@ -40,6 +40,14 @@ jobs:
           python -m pip install --upgrade pip
           pip install -e ".[vision,dev]"
 
+      - name: Report platform
+        run: |
+          python -c "import platform, sys; print('OS:', platform.platform()); print('Architecture:', platform.machine()); print('Python:', sys.version)"
+
+      - name: Verify model manifest
+        run: |
+          python -c "from slt_core.perception.model_assets import verify_model_asset; print(verify_model_asset('models/mediapipe/hand_landmarker.task', 'models/mediapipe/manifest.json'))"
+
       - name: Lint with Ruff
         run: |
           ruff check src/slt_core tools
