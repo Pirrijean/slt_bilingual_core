@@ -1,5 +1,5 @@
-import pytest
-from slt.language import BilingualTranslator, Lexicon, SemanticFrame
+from slt.language import BilingualTranslator, Lexicon
+
 
 def test_lexicon_schema_and_classes():
     lexicon = Lexicon()

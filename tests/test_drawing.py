@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 Tests for slt_desktop.drawing module.
 Verifies clean anatomical drawing overlays for Mode B.
 """
 import numpy as np
-from slt_desktop.drawing import draw_hand_landmarks, HAND_CONNECTIONS, TEAL, WHITE
+
+from slt_desktop.drawing import draw_hand_landmarks
 from slt_desktop.hand_landmarker import HandObservation
 
 

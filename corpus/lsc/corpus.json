@@ -11,7 +11,7 @@
   "community_governance_status": "pending",
   "legal_review_status": "pending",
   "data_retention_policy_version": null,
-  "capture_protocol_versions": ["continuous_v1"],
+  "capture_protocol_versions": ["controlled_v1", "continuous_v1"],
   "lexicon_version": "0.1.0",
   "description": "Foundational corpus for Colombian Sign Language (LSC) research, perception benchmarking, and continuous sign translation."
 }

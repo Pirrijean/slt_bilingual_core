@@ -20,6 +20,7 @@ from slt_corpus.domain import (
     RecordingStatus,
 )
 from slt_corpus.elan import import_eaf, to_slt_annotations
+from slt_corpus.release import DatasetReleaseManager
 from slt_corpus.splits import validate_group_disjoint
 from slt_corpus.storage import ingest_video
 
@@ -100,6 +101,27 @@ def build_parser() -> argparse.ArgumentParser:
         required=True,
         help="JSON mapping recording_id to signer_id",
     )
+
+    # 8. release
+    rel_parser = subparsers.add_parser("release", help="Dataset release management")
+    rel_sub = rel_parser.add_subparsers(dest="subcommand", required=True)
+
+    rel_build = rel_sub.add_parser("build", help="Build an immutable dataset release")
+    rel_build.add_argument("--dataset-id", required=True)
+    rel_build.add_argument("--version", required=True)
+    rel_build.add_argument("--profile-id", default="lsc")
+    rel_build.add_argument("--task", default="continuous_sign_recognition")
+    rel_build.add_argument("--corpus-version", default="0.1.0")
+    rel_build.add_argument("--schema-version", default="1.0.0")
+    rel_build.add_argument("--scope", default="internal_research")
+    rel_build.add_argument("--splits-json", required=True)
+    rel_build.add_argument("--output-dir", required=True)
+    rel_build.add_argument("--storage-root", default="data/private")
+    rel_build.add_argument("--db", default="data/private/catalog.sqlite3")
+
+    rel_val = rel_sub.add_parser("validate", help="Validate an existing release manifest")
+    rel_val.add_argument("--manifest", required=True)
+    rel_val.add_argument("--db", default="data/private/catalog.sqlite3")
 
     return parser
 
@@ -208,6 +230,39 @@ def main(argv: Sequence[str] | None = None) -> int:
             validate_group_disjoint(splits_data.get("splits", splits_data), mapping_data)
             print("Split validation SUCCESS: Signer-independent partitioning verified.")
             return 0
+
+        elif args.command == "release":
+            catalog = CorpusCatalog(args.db)
+            if args.subcommand == "build":
+                splits_data = json.loads(Path(args.splits_json).read_text(encoding="utf-8"))
+                split_members = splits_data.get("splits", splits_data)
+                manager = DatasetReleaseManager(catalog, args.storage_root)
+                release = manager.build_release(
+                    dataset_id=args.dataset_id,
+                    dataset_version=args.version,
+                    profile_id=args.profile_id,
+                    task=args.task,
+                    corpus_version=args.corpus_version,
+                    annotation_schema_version=args.schema_version,
+                    usage_scope=ConsentPurpose(args.scope),
+                    split_members=split_members,
+                    output_dir=args.output_dir,
+                )
+                print(f"Dataset release built successfully: {release.release_id}")
+                return 0
+            elif args.subcommand == "validate":
+                manifest_path = Path(args.manifest)
+                if not manifest_path.is_file():
+                    print(f"Manifest not found: {manifest_path}", file=sys.stderr)
+                    return 1
+                data = json.loads(manifest_path.read_text(encoding="utf-8"))
+                release_id = data.get("release_id")
+                fetched = catalog.get_dataset_release(release_id)
+                if fetched is None:
+                    print(f"Release {release_id} not registered in catalog.", file=sys.stderr)
+                    return 1
+                print(f"Release {release_id} is VALID and registered.")
+                return 0
 
     except Exception as exc:  # noqa: BLE001
         print(f"Execution failed: {exc}", file=sys.stderr)

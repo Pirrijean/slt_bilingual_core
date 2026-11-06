@@ -1,6 +1,8 @@
-import pytest
 import numpy as np
-from slt.recognition import extract_features, SLTClassifier
+import pytest
+
+from slt.recognition import SLTClassifier, extract_features
+
 
 def test_joint_angle_calculation():
     # Perpendicular vectors should have angle pi/2 (approx 1.5708)

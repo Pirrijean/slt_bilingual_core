@@ -1,0 +1,31 @@
+{
+  "schema_version": "1.0.0",
+  "lexicon_version": "0.1.0",
+  "profile_id": "lsc",
+  "variants": [
+    {
+      "variant_id": "VAR_HOLA_BOG_01",
+      "lexical_id": "LSC_HOLA_001",
+      "variant_type": "regional",
+      "region": "Bogotá D.C.",
+      "description": "Standard wave with B-handshape at temple level.",
+      "status": "documented"
+    },
+    {
+      "variant_id": "VAR_HOLA_ANT_01",
+      "lexical_id": "LSC_HOLA_001",
+      "variant_type": "regional",
+      "region": "Antioquia",
+      "description": "Palm oriented slightly outward with double wrist rotation.",
+      "status": "documented"
+    },
+    {
+      "variant_id": "VAR_GRACIAS_CASUAL_01",
+      "lexical_id": "LSC_GRACIAS_001",
+      "variant_type": "phonological",
+      "region": "General",
+      "description": "Rapid chin release without contact in informal registers.",
+      "status": "documented"
+    }
+  ]
+}

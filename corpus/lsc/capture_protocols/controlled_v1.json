@@ -1,0 +1,45 @@
+{
+  "schema_version": "1.0.0",
+  "protocol_id": "lsc_controlled_v1",
+  "profile_id": "lsc",
+  "mode": "controlled",
+  "status": "draft",
+  "title": "LSC Controlled Lexical & Phonological Acquisition Protocol",
+  "recording": {
+    "resolution": [1920, 1080],
+    "minimum_fps": 30,
+    "audio_enabled": false,
+    "preserve_original": true
+  },
+  "tasks": [
+    {
+      "task_id": "task_isolated_greeting_001",
+      "task_type": "isolated_sign",
+      "lexical_id": "LSC_HOLA_001",
+      "prompt_reference": "PROMPT_GREETING_01",
+      "repetitions": 5,
+      "linguistic_review_status": "pending"
+    },
+    {
+      "task_id": "task_isolated_courtesy_001",
+      "task_type": "isolated_sign",
+      "lexical_id": "LSC_GRACIAS_001",
+      "prompt_reference": "PROMPT_COURTESY_01",
+      "repetitions": 5,
+      "linguistic_review_status": "pending"
+    },
+    {
+      "task_id": "task_handshape_discrimination_001",
+      "task_type": "handshape_target",
+      "target_handshape": "B_OPEN",
+      "prompt_reference": "PROMPT_HANDSHAPE_B",
+      "repetitions": 3,
+      "linguistic_review_status": "pending"
+    }
+  ],
+  "approval": {
+    "community_review": "pending",
+    "ethics_review": "pending",
+    "legal_review": "pending"
+  }
+}

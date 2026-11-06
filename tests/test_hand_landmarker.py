@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 Tests for slt_desktop.hand_landmarker module.
 Verifies HandObservation dataclass and SLTHandLandmarker lifecycle.
 """
-import pytest
-import numpy as np
 from pathlib import Path
-from slt_desktop.hand_landmarker import HandObservation, SLTHandLandmarker
+
+import numpy as np
+import pytest
+
 from slt.utils.paths import HAND_LANDMARKER_MODEL
+from slt_desktop.hand_landmarker import HandObservation, SLTHandLandmarker
 
 
 def test_hand_observation_dataclass():

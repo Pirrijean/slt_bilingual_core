@@ -1,5 +1,6 @@
 """Pytest configuration and fixtures for SLT Core testing."""
 import pytest
+
 from slt_core.domain import LanguageProfile
 
 

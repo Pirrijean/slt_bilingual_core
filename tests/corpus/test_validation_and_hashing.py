@@ -14,6 +14,9 @@ from slt_corpus.domain import (
 from slt_corpus.hashing import sha256_bytes, sha256_file, sha256_string
 from slt_corpus.validation import (
     QualityCheckError,
+    compute_boundary_errors,
+    compute_categorical_agreement,
+    compute_temporal_iou,
     validate_annotation_temporal_bounds,
     validate_annotation_tiers,
     validate_recording_integrity,
@@ -158,3 +161,30 @@ def test_annotation_tier_and_temporal_validation():
     # Exceeding duration raises QualityCheckError
     with pytest.raises(QualityCheckError, match="exceeds recording duration"):
         validate_annotation_temporal_bounds([ann1], max_duration_ns=400)
+
+
+def test_inter_annotator_agreement_and_iou():
+    # Test IoU on non-overlapping intervals
+    assert compute_temporal_iou(0, 100, 200, 300) == 0.0
+
+    # Test IoU on identical intervals
+    assert compute_temporal_iou(100, 200, 100, 200) == 1.0
+
+    # Test IoU on 50% overlap: [100, 300) and [200, 400) -> inter 100, union 300 -> 1/3
+    iou = compute_temporal_iou(100, 300, 200, 400)
+    assert abs(iou - (100.0 / 300.0)) < 1e-6
+
+    # Test boundary errors
+    e_start, e_end = compute_boundary_errors(100, 300, 120, 290)
+    assert e_start == 20
+    assert e_end == 10
+
+    # Test categorical agreement
+    labels_a = ["HOLA", "GRACIAS", "BIEN"]
+    labels_b = ["HOLA", "POR_FAVOR", "BIEN"]
+    p_o = compute_categorical_agreement(labels_a, labels_b)
+    assert abs(p_o - (2.0 / 3.0)) < 1e-6
+
+    # Mismatched length raises ValueError
+    with pytest.raises(ValueError):
+        compute_categorical_agreement(["A"], ["A", "B"])

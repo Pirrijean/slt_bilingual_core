@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 Tests for slt_desktop.subtitles module.
 Verifies standard SRT formatting, indices, and transcript report generation.
 """
 from pathlib import Path
+
 from slt_desktop.subtitles import (
-    format_timestamp,
     create_srt_content,
+    create_transcription_txt,
     export_srt,
-    create_transcription_txt
+    format_timestamp,
 )
 
 

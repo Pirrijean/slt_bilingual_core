@@ -10,6 +10,13 @@
       "description": "Communicative unit and sentence-level discourse boundary."
     },
     {
+      "tier_id": "utterance_type",
+      "level": "utterance",
+      "alignment": "reference",
+      "parent_tier": "utterance",
+      "description": "Communicative function (declarative, interrogative_wh, polar, imperative, narrative)."
+    },
+    {
       "tier_id": "translation_es",
       "level": "translation",
       "alignment": "reference",
@@ -45,25 +52,25 @@
       "description": "Stable identifier linked to the active LSC lexicon."
     },
     {
+      "tier_id": "sign_variant",
+      "level": "lexical",
+      "alignment": "reference",
+      "parent_tier": "sign_token",
+      "description": "Identified phonological or regional variant."
+    },
+    {
       "tier_id": "left_handshape",
       "level": "manual",
       "alignment": "time_interval",
       "parent_tier": "utterance",
-      "description": "Observed left hand configuration."
+      "description": "Observed left hand anatomical configuration."
     },
     {
       "tier_id": "right_handshape",
       "level": "manual",
       "alignment": "time_interval",
       "parent_tier": "utterance",
-      "description": "Observed right hand configuration."
-    },
-    {
-      "tier_id": "hand_movement",
-      "level": "manual",
-      "alignment": "time_interval",
-      "parent_tier": "utterance",
-      "description": "Observed trajectory, path, and articulation movement."
+      "description": "Observed right hand anatomical configuration."
     },
     {
       "tier_id": "hand_orientation",
@@ -80,11 +87,11 @@
       "description": "Signing space location (head, chest, neutral space)."
     },
     {
-      "tier_id": "facial_nonmanual",
-      "level": "nonmanual",
+      "tier_id": "hand_movement",
+      "level": "manual",
       "alignment": "time_interval",
       "parent_tier": "utterance",
-      "description": "Non-manual facial behavior (eyebrow raise, furrow, squint)."
+      "description": "Observed trajectory, path, and articulation movement."
     },
     {
       "tier_id": "head_movement",
@@ -94,6 +101,13 @@
       "description": "Head nod, shake, tilt, or thrust."
     },
     {
+      "tier_id": "facial_nonmanual",
+      "level": "nonmanual",
+      "alignment": "time_interval",
+      "parent_tier": "utterance",
+      "description": "Non-manual facial behavior (eyebrow raise, furrow, squint)."
+    },
+    {
       "tier_id": "eye_gaze",
       "level": "nonmanual",
       "alignment": "time_interval",
@@ -101,11 +115,32 @@
       "description": "Gaze direction (interlocutor, hands, spatial locus)."
     },
     {
+      "tier_id": "mouth_action",
+      "level": "nonmanual",
+      "alignment": "time_interval",
+      "parent_tier": "utterance",
+      "description": "Mouth gestures, oral components, and Spanish mouthing."
+    },
+    {
       "tier_id": "body_posture",
       "level": "nonmanual",
       "alignment": "time_interval",
       "parent_tier": "utterance",
       "description": "Torso lean, shift, or rotation indicating grammatical role."
+    },
+    {
+      "tier_id": "spatial_reference",
+      "level": "spatial",
+      "alignment": "time_interval",
+      "parent_tier": "utterance",
+      "description": "Spatial locus, indexing, or directional verb agreement point."
+    },
+    {
+      "tier_id": "annotation_note",
+      "level": "metadata",
+      "alignment": "reference",
+      "parent_tier": "utterance",
+      "description": "Annotator observations, coarticulation notes, or uncertainties."
     }
   ]
 }
