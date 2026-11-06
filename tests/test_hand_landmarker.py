@@ -16,13 +16,15 @@ def test_hand_observation_dataclass():
     dummy_norm = np.zeros((21, 3), dtype=np.float32)
     dummy_world = np.zeros((21, 3), dtype=np.float32)
     obs = HandObservation(
-        landmarks_norm=dummy_norm,
-        landmarks_world=dummy_world,
+        landmarks=dummy_norm,
+        world_landmarks=dummy_world,
         handedness="Right",
-        score=0.95
+        detection_score=0.95
     )
+    assert obs.landmarks.shape == (21, 3)
     assert obs.landmarks_norm.shape == (21, 3)
     assert obs.handedness == "Right"
+    assert obs.detection_score == 0.95
     assert obs.score == 0.95
 
 

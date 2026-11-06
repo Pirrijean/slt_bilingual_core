@@ -5,7 +5,9 @@ SLT Desktop: Vision Worker Thread.
 Coordinates video capture (Camera / Video File), MediaPipe HandLandmarker,
 visual overlay rendering (Mode A / Mode B), and recognition backend processing.
 """
+from __future__ import annotations
 from typing import Optional, List, Dict, Any
+from pathlib import Path
 import time
 import logging
 import cv2
@@ -29,23 +31,40 @@ class VisionWorker(QThread):
     - Video File Mode: Offline processing of video files with exact timecodes.
     """
     frame_ready = Signal(QImage)
-    signs_confirmed = Signal(list)                   # List of sign event dicts
+    metrics_changed = Signal(object)                 # Dict with {fps, latency_ms, num_hands}
     metrics_updated = Signal(float, float, int)      # (fps, latency_ms, num_hands)
+    sign_event = Signal(object)                      # Single sign event dict
+    signs_confirmed = Signal(list)                   # List of sign event dicts
+    status_changed = Signal(str)                     # Status message
+    progress_changed = Signal(float)                 # Progress ratio [0.0, 1.0]
     video_progress = Signal(float, float, float, int) # (progress_ratio, proc_fps, eta_sec, hands)
+    source_finished = Signal()                       # Emitted when source finishes
     video_finished = Signal(list)                    # All events from video
     error_occurred = Signal(str)
 
     def __init__(
         self,
-        camera_index: int = 0,
-        video_path: Optional[str] = None,
+        source_mode: str = "camera",
+        source: Any = 0,
+        hand_model_path: Optional[str | Path] = None,
         recognition_backend: Optional[RecognitionBackend] = None,
-        show_landmarks: bool = False
+        show_landmarks: bool = False,
+        camera_index: Optional[int] = None,
+        video_path: Optional[str] = None
     ):
         super().__init__()
-        self.camera_index = camera_index
-        self.video_path = video_path
-        self.is_video_mode = bool(video_path)
+        # Flexible argument normalization
+        if video_path is not None:
+            self.source_mode = "video"
+            self.source = video_path
+        elif camera_index is not None:
+            self.source_mode = "camera"
+            self.source = camera_index
+        else:
+            self.source_mode = str(source_mode)
+            self.source = source
+
+        self.hand_model_path = str(hand_model_path) if hand_model_path else None
         self.backend = recognition_backend or build_recognition_backend()
         self.show_landmarks = bool(show_landmarks)
 
@@ -54,6 +73,10 @@ class VisionWorker(QThread):
         self._landmarker: Optional[SLTHandLandmarker] = None
         self._all_video_events: List[Dict[str, Any]] = []
 
+    @property
+    def is_video_mode(self) -> bool:
+        return self.source_mode == "video"
+
     def set_show_landmarks(self, enabled: bool):
         """Toggle anatomical overlay (Mode A: Clean vs Mode B: Demonstration)."""
         self.show_landmarks = bool(enabled)
@@ -61,6 +84,7 @@ class VisionWorker(QThread):
     def stop(self):
         """Signal thread to stop execution and release capture device."""
         self._running = False
+        self.requestInterruption()
         if self._cap is not None:
             try:
                 self._cap.release()
@@ -73,13 +97,19 @@ class VisionWorker(QThread):
         self.backend.reset()
 
         try:
-            self._landmarker = SLTHandLandmarker(num_hands=2, min_confidence=0.5)
+            self._landmarker = SLTHandLandmarker(
+                model_path=self.hand_model_path,
+                num_hands=2,
+                detection_confidence=0.6
+            )
         except Exception as e:
             logger.error(f"Failed to initialize SLTHandLandmarker: {e}")
             self.error_occurred.emit(f"No se pudo cargar el modelo de visión: {e}")
             return
 
-        if self.is_video_mode:
+        self.status_changed.emit(f"Fuente iniciada ({self.source_mode}).")
+
+        if self.source_mode == "video":
             self._run_video_file()
         else:
             self._run_camera()
@@ -88,13 +118,16 @@ class VisionWorker(QThread):
             self._landmarker.close()
             self._landmarker = None
 
+        self.status_changed.emit("Sesión finalizada.")
+
     def _run_camera(self):
         """Live camera capture loop."""
-        cap = cv2.VideoCapture(self.camera_index)
+        cam_idx = int(self.source) if isinstance(self.source, (int, str)) and str(self.source).isdigit() else 0
+        cap = cv2.VideoCapture(cam_idx)
         self._cap = cap
         if not cap.isOpened():
-            logger.error(f"Cannot open camera index {self.camera_index}")
-            self.error_occurred.emit(f"No se pudo acceder a la cámara {self.camera_index}.")
+            logger.error(f"Cannot open camera index {cam_idx}")
+            self.error_occurred.emit(f"No se pudo acceder a la cámara {cam_idx}.")
             return
 
         cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
@@ -106,7 +139,7 @@ class VisionWorker(QThread):
         last_ts_ms = -1
 
         try:
-            while self._running:
+            while self._running and not self.isInterruptionRequested():
                 ret, frame_bgr = cap.read()
                 if not ret or frame_bgr is None:
                     time.sleep(0.01)
@@ -127,6 +160,8 @@ class VisionWorker(QThread):
                 confirmed = self.backend.process(observations, ts_ms)
                 if confirmed:
                     self.signs_confirmed.emit(confirmed)
+                    for ev in confirmed:
+                        self.sign_event.emit(ev)
 
                 # 3. Visualization Mode
                 # Mode A: Clean camera screen (default, show_landmarks=False)
@@ -148,19 +183,23 @@ class VisionWorker(QThread):
                     frame_counter = 0
                     fps_calc_time = time.perf_counter()
                     self.metrics_updated.emit(current_fps, latency_ms, num_hands)
+                    self.metrics_changed.emit({
+                        "fps": current_fps,
+                        "latency_ms": latency_ms,
+                        "num_hands": num_hands
+                    })
 
         finally:
             cap.release()
 
     def _run_video_file(self):
         """Offline video file processing loop."""
-        if not self.video_path:
-            return
-
-        cap = cv2.VideoCapture(self.video_path)
+        video_path = str(self.source)
+        cap = cv2.VideoCapture(video_path)
+        self._cap = cap
         if not cap.isOpened():
-            logger.error(f"Cannot open video file: {self.video_path}")
-            self.error_occurred.emit(f"No se pudo abrir el archivo de video: {self.video_path}")
+            logger.error(f"Cannot open video file: {video_path}")
+            self.error_occurred.emit(f"No se pudo abrir el archivo de video: {video_path}")
             return
 
         total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
@@ -168,14 +207,12 @@ class VisionWorker(QThread):
         if native_fps <= 0 or np.isnan(native_fps):
             native_fps = 30.0
 
-        total_duration_sec = total_frames / native_fps if total_frames > 0 else 1.0
-
         frame_idx = 0
         proc_start_time = time.perf_counter()
         last_ts_ms = -1
 
         try:
-            while self._running:
+            while self._running and not self.isInterruptionRequested():
                 ret, frame_bgr = cap.read()
                 if not ret or frame_bgr is None:
                     break  # End of video
@@ -196,6 +233,8 @@ class VisionWorker(QThread):
                 if confirmed:
                     self._all_video_events.extend(confirmed)
                     self.signs_confirmed.emit(confirmed)
+                    for ev in confirmed:
+                        self.sign_event.emit(ev)
 
                 # 3. Visualization
                 if self.show_landmarks and observations:
@@ -214,11 +253,19 @@ class VisionWorker(QThread):
                 remaining_frames = max(0, total_frames - frame_idx)
                 eta_seconds = remaining_frames / proc_fps if proc_fps > 0 else 0.0
 
+                self.progress_changed.emit(progress_ratio)
                 self.video_progress.emit(progress_ratio, proc_fps, eta_seconds, num_hands)
                 self.metrics_updated.emit(proc_fps, latency_ms, num_hands)
+                self.metrics_changed.emit({
+                    "fps": proc_fps,
+                    "latency_ms": latency_ms,
+                    "num_hands": num_hands
+                })
 
-            # Emitted only if video finished completely without cancellation
-            if self._running and frame_idx >= total_frames:
+            # Section 9.1: Only emit 1.0 if not cancelled/interrupted early!
+            if self.source_mode == "video" and not self.isInterruptionRequested():
+                self.progress_changed.emit(1.0)
+                self.source_finished.emit()
                 self.video_finished.emit(list(self._all_video_events))
 
         finally:
@@ -230,6 +277,5 @@ class VisionWorker(QThread):
         rgb = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB)
         h, w, ch = rgb.shape
         bytes_per_line = ch * w
-        # QImage must copy the data buffer to avoid garbage collection issues
         q_img = QImage(rgb.data, w, h, bytes_per_line, QImage.Format_RGB888).copy()
         return q_img

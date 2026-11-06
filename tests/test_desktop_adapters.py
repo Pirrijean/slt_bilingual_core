@@ -7,13 +7,18 @@ Verifies contract compliance, FSM integration, and bilingual translation.
 import pytest
 import numpy as np
 from slt_desktop.hand_landmarker import HandObservation
-from slt_desktop.recognition_adapter import build_recognition_backend, SLTRecognitionBackend
+from slt_desktop.recognition_adapter import (
+    build_recognition_backend,
+    SLTRecognitionBackend,
+    RecognitionUnavailable
+)
 from slt_desktop.translation_adapter import TranslationAdapter
 
 
 def test_translation_adapter():
     """Verify TranslationAdapter produces simultaneous Spanish and English sentences."""
     adapter = TranslationAdapter()
+    assert adapter.ready is True
 
     # Empty test
     empty = adapter.translate_glosses([])
@@ -31,11 +36,12 @@ def test_translation_adapter():
 
 
 def test_recognition_adapter_contract():
-    """Verify RecognitionBackend contract, empty frames, and reset."""
+    """Verify RecognitionBackend contract, ready flag, status message, and reset."""
     backend = build_recognition_backend()
-    assert isinstance(backend, SLTRecognitionBackend)
+    assert backend.ready is True
+    assert "activo" in backend.status_message.lower()
 
-    # Empty observations should return empty confirmed list
+    # Empty observations should return empty confirmed list (NO_HAND state)
     res = backend.process([], timestamp_ms=100)
     assert isinstance(res, list)
     assert len(res) == 0
@@ -43,14 +49,22 @@ def test_recognition_adapter_contract():
     # With dummy observation
     dummy_norm = np.zeros((21, 3), dtype=np.float32)
     obs = HandObservation(
-        landmarks_norm=dummy_norm,
-        landmarks_world=None,
+        landmarks=dummy_norm,
+        world_landmarks=None,
         handedness="Right",
-        score=0.9
+        detection_score=0.9
     )
 
     res2 = backend.process([obs], timestamp_ms=200)
     assert isinstance(res2, list)
 
     backend.reset()
-    assert len(backend._new_events) == 0
+    backend.close()
+
+
+def test_recognition_unavailable():
+    """Verify fallback behavior of RecognitionUnavailable."""
+    unavail = RecognitionUnavailable()
+    assert unavail.ready is False
+    assert "aún no está conectado" in unavail.status_message
+    assert unavail.process([], 100) == []

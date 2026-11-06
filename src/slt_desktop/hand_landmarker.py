@@ -4,29 +4,42 @@
 SLT Desktop: MediaPipe Tasks Hand Landmarker Integration.
 Provides anatomical perception running in VIDEO mode with monotonically increasing timestamps.
 """
+from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 from typing import List, Optional
 import logging
 import cv2
-import numpy as np
-
 import mediapipe as mp
 from mediapipe.tasks import python
 from mediapipe.tasks.python import vision
+import numpy as np
 
 from slt.utils.paths import HAND_LANDMARKER_MODEL
 
 logger = logging.getLogger("slt_desktop.hand_landmarker")
 
 
-@dataclass
+@dataclass(slots=True)
 class HandObservation:
-    """Represents a single detected hand observation in a frame."""
-    landmarks_norm: np.ndarray               # Shape (21, 3): normalized coordinates [0, 1]
-    landmarks_world: Optional[np.ndarray]    # Shape (21, 3): world metric coordinates
-    handedness: str                          # "Left" or "Right"
-    score: float                             # Confidence score [0, 1]
+    """
+    Represents a single detected hand observation in a frame.
+    Adheres strictly to the SLT Desktop specification while providing backward-compatible aliases.
+    """
+    landmarks: np.ndarray                        # Shape (21, 3): normalized coordinates [0, 1]
+    world_landmarks: Optional[np.ndarray]        # Shape (21, 3): world metric coordinates
+    handedness: str                              # "Left" or "Right"
+    detection_score: float                       # Confidence score [0, 1]
+
+    @property
+    def landmarks_norm(self) -> np.ndarray:
+        """Alias for backward compatibility."""
+        return self.landmarks
+
+    @property
+    def score(self) -> float:
+        """Alias for backward compatibility."""
+        return self.detection_score
 
 
 class SLTHandLandmarker:
@@ -36,23 +49,26 @@ class SLTHandLandmarker:
     """
     def __init__(
         self,
-        model_path: Optional[str] = None,
+        model_path: str | Path | None = None,
         num_hands: int = 2,
-        min_confidence: float = 0.5
+        detection_confidence: float = 0.6,
+        presence_confidence: float = 0.6,
+        tracking_confidence: float = 0.6,
     ):
-        self.model_path = str(model_path or HAND_LANDMARKER_MODEL)
+        self.model_path = Path(model_path or HAND_LANDMARKER_MODEL)
         self.num_hands = int(num_hands)
-        self.min_confidence = float(min_confidence)
+        self.detection_confidence = float(detection_confidence)
+        self.presence_confidence = float(presence_confidence)
+        self.tracking_confidence = float(tracking_confidence)
         self._landmarker: Optional[vision.HandLandmarker] = None
         self._last_timestamp_ms: int = -1
         self._initialize()
 
     def _initialize(self):
-        resolved_path = Path(self.model_path).resolve()
+        resolved_path = self.model_path.resolve()
         if not resolved_path.is_file():
             raise FileNotFoundError(
-                f"Hand Landmarker model not found at {resolved_path}. "
-                "Run `python slt_installer.py` or download the model."
+                f"No existe el modelo Hand Landmarker: {resolved_path}"
             )
 
         base_options = python.BaseOptions(model_asset_path=str(resolved_path))
@@ -60,12 +76,12 @@ class SLTHandLandmarker:
             base_options=base_options,
             running_mode=vision.RunningMode.VIDEO,
             num_hands=self.num_hands,
-            min_hand_detection_confidence=self.min_confidence,
-            min_hand_presence_confidence=self.min_confidence,
-            min_tracking_confidence=self.min_confidence
+            min_hand_detection_confidence=self.detection_confidence,
+            min_hand_presence_confidence=self.presence_confidence,
+            min_tracking_confidence=self.tracking_confidence
         )
         self._landmarker = vision.HandLandmarker.create_from_options(options)
-        logger.info(f"SLTHandLandmarker initialized in VIDEO mode (model: {resolved_path.name}).")
+        logger.info(f"SLTHandLandmarker initialized in VIDEO mode ({resolved_path.name}).")
 
     def detect(self, frame_bgr: np.ndarray, timestamp_ms: int) -> List[HandObservation]:
         """
@@ -90,8 +106,8 @@ class SLTHandLandmarker:
         if not result or not result.hand_landmarks:
             return observations
 
-        for idx, landmarks in enumerate(result.hand_landmarks):
-            norm_coords = np.array([[lm.x, lm.y, lm.z] for lm in landmarks], dtype=np.float32)
+        for idx, lms in enumerate(result.hand_landmarks):
+            norm_coords = np.array([[lm.x, lm.y, lm.z] for lm in lms], dtype=np.float32)
 
             world_coords = None
             if result.hand_world_landmarks and idx < len(result.hand_world_landmarks):
@@ -108,10 +124,10 @@ class SLTHandLandmarker:
                 score = float(cat.score)
 
             observations.append(HandObservation(
-                landmarks_norm=norm_coords,
-                landmarks_world=world_coords,
+                landmarks=norm_coords,
+                world_landmarks=world_coords,
                 handedness=handedness_label,
-                score=score
+                detection_score=score
             ))
 
         return observations

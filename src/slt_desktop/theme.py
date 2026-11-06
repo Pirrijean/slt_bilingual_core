@@ -4,64 +4,86 @@
 SLT Desktop: Dark Minimalist Theme & Color Constants.
 Modern, high-contrast, professional styling for the communication workspace.
 """
+from __future__ import annotations
 
 # Palette Constants
-BG_DARK = "#12161E"
-BG_CARD = "#1A202C"
-BG_PANEL = "#1E2530"
-BORDER_COLOR = "#2D3748"
-BORDER_FOCUS = "#42BFB0"
-TEXT_PRIMARY = "#FFFFFF"
-TEXT_SECONDARY = "#94A3B8"
-TEXT_MUTED = "#64748B"
-TEAL_ACCENT = "#42BFB0"
-MINT_ACCENT = "#2DD4BF"
-ACTIVE_LIVE = "#EF4444"
-WARN_COLOR = "#F59E0B"
+TEAL = "#42BFB0"
+MINT = "#2DD4BF"
+TEAL_ACCENT = TEAL
+MINT_ACCENT = MINT
+DARK_BG = "#101820"
+CARD_BG = "#172631"
+BORDER = "#30434D"
+TEXT_COLOR = "#EAF2F5"
+MUTED_TEXT = "#8EA5AF"
 
 DARK_THEME = """
-/* SLT Desktop Modern Clean Theme */
+QMainWindow {
+    background-color: #101820;
+}
+
 QWidget {
-    background-color: #12161E;
-    color: #FFFFFF;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: #EAF2F5;
+    font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
     font-size: 13px;
     selection-background-color: #42BFB0;
-    selection-color: #12161E;
+    selection-color: #101820;
 }
 
-QMainWindow {
-    background-color: #12161E;
+QLabel#brand {
+    color: #FFFFFF;
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
 }
 
-QFrame#HeaderCard, QFrame#VideoCard, QFrame#SubtitleCard, QFrame#TimelineCard, QFrame#CleanmeterCard {
-    background-color: #1A202C;
-    border: 1px solid #2D3748;
-    border-radius: 8px;
+QLabel#subtitle {
+    color: #8EA5AF;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+QLabel#status {
+    color: #67CCBC;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+QFrame#videoCard,
+QFrame#translationCard,
+QFrame#HeaderCard,
+QFrame#VideoCard,
+QFrame#SubtitleCard,
+QFrame#TimelineCard,
+QFrame#CleanmeterCard {
+    background-color: #172631;
+    border: 1px solid #30434D;
+    border-radius: 10px;
 }
 
 /* Primary and Secondary Action Buttons */
 QPushButton {
-    background-color: #2D3748;
+    background-color: #243542;
     color: #FFFFFF;
-    border: 1px solid #4A5568;
+    border: 1px solid #3A4F5E;
     border-radius: 6px;
     padding: 6px 14px;
     font-weight: 500;
 }
 
 QPushButton:hover {
-    background-color: #3A475A;
+    background-color: #2F4454;
     border-color: #42BFB0;
 }
 
 QPushButton:pressed {
-    background-color: #1F2733;
+    background-color: #1A2832;
 }
 
 QPushButton#PrimaryButton {
     background-color: #42BFB0;
-    color: #12161E;
+    color: #101820;
     border: 1px solid #2DD4BF;
     font-weight: 600;
 }
@@ -86,9 +108,9 @@ QPushButton#DangerButton:hover {
 
 /* ComboBox Styling */
 QComboBox {
-    background-color: #1E2530;
+    background-color: #1E2D3A;
     color: #FFFFFF;
-    border: 1px solid #2D3748;
+    border: 1px solid #30434D;
     border-radius: 6px;
     padding: 5px 10px;
     min-width: 110px;
@@ -104,17 +126,17 @@ QComboBox::drop-down {
 }
 
 QComboBox QAbstractItemView {
-    background-color: #1E2530;
+    background-color: #1E2D3A;
     color: #FFFFFF;
-    border: 1px solid #2D3748;
+    border: 1px solid #30434D;
     selection-background-color: #42BFB0;
-    selection-color: #12161E;
+    selection-color: #101820;
     outline: none;
 }
 
 /* CheckBox / Toggle Styling */
 QCheckBox {
-    color: #E2E8F0;
+    color: #EAF2F5;
     font-weight: 500;
     spacing: 8px;
 }
@@ -122,9 +144,9 @@ QCheckBox {
 QCheckBox::indicator {
     width: 18px;
     height: 18px;
-    border: 1px solid #4A5568;
+    border: 1px solid #3A4F5E;
     border-radius: 4px;
-    background-color: #1E2530;
+    background-color: #1E2D3A;
 }
 
 QCheckBox::indicator:hover {
@@ -138,13 +160,6 @@ QCheckBox::indicator:checked {
 }
 
 /* Typography Classes */
-QLabel#AppTitle {
-    font-size: 15px;
-    font-weight: 700;
-    color: #FFFFFF;
-    letter-spacing: 0.5px;
-}
-
 QLabel#ModeBadgeLive {
     background-color: #7F1D1D;
     color: #FCA5A5;
@@ -189,13 +204,13 @@ QLabel#SubtitleTextEN {
 
 QLabel#TelemetryItem {
     font-size: 11px;
-    color: #94A3B8;
+    color: #8EA5AF;
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 }
 
 QProgressBar {
-    background-color: #1E2530;
-    border: 1px solid #2D3748;
+    background-color: #1E2D3A;
+    border: 1px solid #30434D;
     border-radius: 4px;
     text-align: center;
     color: #FFFFFF;

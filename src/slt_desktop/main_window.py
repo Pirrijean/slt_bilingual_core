@@ -36,16 +36,36 @@ logger = logging.getLogger("slt_desktop.main_window")
 class MainWindow(QMainWindow):
     """SLT Bilingual Core Desktop Workspace."""
 
-    def __init__(self, auto_start_camera: bool = True):
+    def __init__(
+        self,
+        hand_model_path: str | Path | None = None,
+        recognizer_factory=None,
+        translation_service=None,
+        speech_service=None,
+        auto_start_camera: bool = True
+    ):
         super().__init__()
         self.setWindowTitle("SLT Bilingual Core · Traductor Bilingüe de Lengua de Señas")
         self.setMinimumSize(1150, 780)
         self.setStyleSheet(DARK_THEME)
 
-        # Core Engines
-        self.backend = build_recognition_backend()
-        self.translator = TranslationAdapter()
-        self.speech = SpeechWorker(mode="both", auto_speak=False)
+        self.hand_model_path = str(hand_model_path) if hand_model_path else None
+
+        # Core Engines (Injected or default)
+        if recognizer_factory is not None:
+            self.backend = recognizer_factory() if callable(recognizer_factory) else recognizer_factory
+        else:
+            self.backend = build_recognition_backend()
+
+        if translation_service is not None:
+            self.translator = translation_service if hasattr(translation_service, "translate_glosses") else TranslationAdapter(translation_service)
+        else:
+            self.translator = TranslationAdapter()
+
+        if speech_service is not None:
+            self.speech = speech_service
+        else:
+            self.speech = SpeechWorker(mode="both", auto_speak=False)
 
         # State Variables
         self.gloss_sequence: List[str] = []
