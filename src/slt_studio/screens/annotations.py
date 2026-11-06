@@ -116,8 +116,10 @@ class AnnotationsScreen(QWidget):
             for row, ann in enumerate(annotations):
                 self.table.setItem(row, 0, QTableWidgetItem(ann.annotation_id))
                 self.table.setItem(row, 1, QTableWidgetItem(ann.tier_id))
-                self.table.setItem(row, 2, QTableWidgetItem(f"{ann.start_ns / 1_000_000:.1f}"))
-                self.table.setItem(row, 3, QTableWidgetItem(f"{ann.end_ns / 1_000_000:.1f}"))
+                start_text = f"{ann.start_ns / 1_000_000:.1f}" if ann.start_ns is not None else "-"
+                end_text = f"{ann.end_ns / 1_000_000:.1f}" if ann.end_ns is not None else "-"
+                self.table.setItem(row, 2, QTableWidgetItem(start_text))
+                self.table.setItem(row, 3, QTableWidgetItem(end_text))
                 self.table.setItem(row, 4, QTableWidgetItem(ann.value))
                 self.table.setItem(row, 5, QTableWidgetItem(ann.boundary_quality.value))
 

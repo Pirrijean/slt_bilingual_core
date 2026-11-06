@@ -44,7 +44,7 @@ def test_slt_hand_landmarker_lifecycle_and_monotonicity():
     assert len(res1) == 0
 
     # Test monotonic timestamp enforcement when passing same timestamp
-    res2 = detector.detect(dummy_frame, timestamp_ms=100)
+    detector.detect(dummy_frame, timestamp_ms=100)
     assert detector._last_timestamp_ms == 101  # Enforced +1 ms
 
     # Clean close

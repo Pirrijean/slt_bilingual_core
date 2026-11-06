@@ -22,6 +22,10 @@ class ComponentNotReadyError(SLTError):
     """A required pipeline component is unavailable."""
 
 
+class ClosedPipelineError(ComponentNotReadyError):
+    """The pipeline has already been closed and cannot process additional frames."""
+
+
 class ComponentContractError(SLTError):
     """A component returned an invalid result."""
 

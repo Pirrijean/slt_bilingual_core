@@ -114,3 +114,165 @@ def compute_hand_geometry(observation: HandObservation) -> HandGeometry:
         wrist_to_middle_mcp=wrist_to_middle,
         relative_landmarks=relative_lms,
     )
+
+
+# ---------------------------------------------------------------------------
+# Section 2.4 Independent 2D and 3D Geometry Contracts
+# ---------------------------------------------------------------------------
+
+
+@dataclass(frozen=True, slots=True)
+class Point2D:
+    """2D Cartesian point in image pixel coordinates."""
+
+    x_px: float
+    y_px: float
+
+
+@dataclass(frozen=True, slots=True)
+class BoundingBox2D:
+    """2D Bounding box in image pixel coordinates."""
+
+    x_min_px: float
+    y_min_px: float
+    x_max_px: float
+    y_max_px: float
+
+
+@dataclass(frozen=True, slots=True)
+class HandGeometry2D:
+    """Strict 2D image-coordinate geometry for bounding boxes, center, and finger angles."""
+
+    tracking_id: int | None
+    bounding_box: BoundingBox2D
+    palm_center: Point2D
+    palm_width_px: float
+    relative_landmarks: tuple[Point2D, ...]
+    finger_angles_deg: tuple[tuple[str, float], ...] = ()
+
+
+@dataclass(frozen=True, slots=True)
+class Point3D:
+    """3D point in anatomical world coordinates."""
+
+    x_m: float
+    y_m: float
+    z_m: float
+
+
+@dataclass(frozen=True, slots=True)
+class HandGeometry3D:
+    """Strict 3D world-coordinate anatomical geometry for joint angles and relative configuration."""
+
+    tracking_id: int | None
+    world_landmarks: tuple[Point3D, ...]
+    joint_angles_deg: tuple[tuple[str, float], ...] = ()
+
+
+def compute_hand_geometry_2d(
+    observation: HandObservation,
+    width: int,
+    height: int,
+) -> HandGeometry2D:
+    """Compute 2D image-coordinate geometry scaled to actual pixel resolution."""
+    if width <= 0 or height <= 0:
+        raise GeometryError("Image width and height must be positive integers.")
+    lms = observation.landmarks
+    if len(lms) != 21:
+        raise GeometryError(f"Expected 21 landmarks, got {len(lms)}.")
+
+    points_px = [Point2D(x_px=lm.x * width, y_px=lm.y * height) for lm in lms]
+    xs = [p.x_px for p in points_px]
+    ys = [p.y_px for p in points_px]
+
+    bbox = BoundingBox2D(
+        x_min_px=min(xs),
+        y_min_px=min(ys),
+        x_max_px=max(xs),
+        y_max_px=max(ys),
+    )
+
+    index_mcp = points_px[5]
+    pinky_mcp = points_px[17]
+    palm_width_px = sqrt((index_mcp.x_px - pinky_mcp.x_px) ** 2 + (index_mcp.y_px - pinky_mcp.y_px) ** 2)
+    if palm_width_px < 1e-5:
+        raise GeometryError("Degenerate palm width in 2D geometry.")
+
+    wrist = points_px[0]
+    middle_mcp = points_px[9]
+    palm_center = Point2D(
+        x_px=(wrist.x_px + middle_mcp.x_px) * 0.5,
+        y_px=(wrist.y_px + middle_mcp.y_px) * 0.5,
+    )
+
+    scale = 1.0 / palm_width_px
+    rel_lms = tuple(
+        Point2D(
+            x_px=(p.x_px - wrist.x_px) * scale,
+            y_px=(p.y_px - wrist.y_px) * scale,
+        )
+        for p in points_px
+    )
+
+    # Basic finger angles in 2D
+    angles = []
+    finger_indices = [
+        ("thumb", 1, 2, 4),
+        ("index", 5, 6, 8),
+        ("middle", 9, 10, 12),
+        ("ring", 13, 14, 16),
+        ("pinky", 17, 18, 20),
+    ]
+    for name, p1_idx, v_idx, p2_idx in finger_indices:
+        try:
+            ang = angle_degrees(lms[p1_idx], lms[v_idx], lms[p2_idx])
+            angles.append((name, ang))
+        except GeometryError:
+            angles.append((name, 0.0))
+
+    return HandGeometry2D(
+        tracking_id=observation.tracking_id,
+        bounding_box=bbox,
+        palm_center=palm_center,
+        palm_width_px=palm_width_px,
+        relative_landmarks=rel_lms,
+        finger_angles_deg=tuple(angles),
+    )
+
+
+def compute_hand_geometry_3d(
+    observation: HandObservation,
+    world_landmarks: tuple[Landmark, ...] | None = None,
+) -> HandGeometry3D:
+    """Compute 3D world geometry using anatomical world coordinates."""
+    lms = world_landmarks if world_landmarks is not None else observation.landmarks
+    if len(lms) != 21:
+        raise GeometryError(f"Expected 21 landmarks, got {len(lms)}.")
+
+    points_3d = tuple(Point3D(x_m=lm.x, y_m=lm.y, z_m=lm.z) for lm in lms)
+
+    angles = []
+    finger_indices = [
+        ("thumb_mcp", 1, 2, 3),
+        ("thumb_ip", 2, 3, 4),
+        ("index_mcp", 0, 5, 6),
+        ("index_pip", 5, 6, 7),
+        ("middle_mcp", 0, 9, 10),
+        ("middle_pip", 9, 10, 11),
+        ("ring_mcp", 0, 13, 14),
+        ("ring_pip", 13, 14, 15),
+        ("pinky_mcp", 0, 17, 18),
+        ("pinky_pip", 17, 18, 19),
+    ]
+    for name, p1_idx, v_idx, p2_idx in finger_indices:
+        try:
+            ang = angle_degrees(lms[p1_idx], lms[v_idx], lms[p2_idx])
+            angles.append((name, ang))
+        except GeometryError:
+            angles.append((name, 0.0))
+
+    return HandGeometry3D(
+        tracking_id=observation.tracking_id,
+        world_landmarks=points_3d,
+        joint_angles_deg=tuple(angles),
+    )

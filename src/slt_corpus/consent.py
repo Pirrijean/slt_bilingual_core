@@ -8,8 +8,10 @@ corresponding participant.
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
+from datetime import UTC, datetime
+from typing import Any
 
-from slt_corpus.domain import ConsentPurpose, ConsentRecord
+from slt_corpus.domain import ConsentPurpose, ConsentRecord, ConsentStatus
 
 
 class ConsentDeniedError(PermissionError):
@@ -18,26 +20,37 @@ class ConsentDeniedError(PermissionError):
 
 def require_consent(
     consent: ConsentRecord,
-    purpose: ConsentPurpose,
-    signer_id: str,
+    target_a: str | ConsentPurpose,
+    target_b: str | ConsentPurpose,
 ) -> None:
     """Verify that a consent record grants a specific purpose for a signer.
 
-    Raises:
-        ConsentDeniedError: If signer does not match, consent is revoked,
-            or the specific purpose is not authorized.
+    Supports both (consent, signer_id, purpose) and (consent, purpose, signer_id).
     """
+    if isinstance(target_a, ConsentPurpose):
+        purpose = target_a
+        signer_id = str(target_b)
+    else:
+        signer_id = str(target_a)
+        purpose = ConsentPurpose(target_b)
+
     if consent.signer_id != signer_id:
         raise ConsentDeniedError(
             f"Consent belongs to signer {consent.signer_id!r}, not {signer_id!r}."
         )
-    if consent.revoked_at_utc is not None:
+    if consent.status == ConsentStatus.REVOKED or consent.revoked_at_utc is not None:
         raise ConsentDeniedError(
-            f"Consent {consent.consent_id!r} for signer {signer_id!r} was revoked at {consent.revoked_at_utc}."
+            f"Consent {consent.consent_id!r} for signer {signer_id!r} was revoked."
         )
-    if not consent.permits(purpose):
+    if consent.status != ConsentStatus.ACTIVE:
         raise ConsentDeniedError(
-            f"Consent {consent.consent_id!r} does not authorize purpose: {purpose.value!r}"
+            f"Consent {consent.consent_id!r} for signer {signer_id!r} is not active ({consent.status.value})."
+        )
+
+    now = datetime.now(UTC)
+    if not consent.permits(purpose, now):
+        raise ConsentDeniedError(
+            f"Consent {consent.consent_id!r} does not authorize purpose {purpose.value!r} for signer {signer_id!r}."
         )
 
 
@@ -46,31 +59,43 @@ def validate_video_storage_scope(
     signer_id: str,
 ) -> None:
     """Ensure consent grants permission to record and store raw video."""
-    require_consent(consent, ConsentPurpose.RECORD_AND_STORE, signer_id)
+    require_consent(consent, signer_id, ConsentPurpose.RECORD_AND_STORE)
 
 
-def validate_landmark_derivation_scope(
-    consent: ConsentRecord,
-    signer_id: str,
-) -> None:
-    """Ensure consent grants permission to extract landmark and feature data."""
-    require_consent(consent, ConsentPurpose.DERIVE_LANDMARKS, signer_id)
+def validate_release_consent(*args: Any, **kwargs: Any) -> None:
+    """Ensure all recordings or signers to be released have active authorization for the target purpose.
 
-
-def validate_release_consent(
-    consents_by_signer: Mapping[str, ConsentRecord],
-    recording_signers: Iterable[str],
-    usage_scope: ConsentPurpose,
-) -> None:
-    """Verify that all signers contributing to a dataset release have authorized the scope.
-
-    Raises:
-        ConsentDeniedError: If any contributing signer lacks an active consent record
-            authorizing the specified release usage scope (e.g. COMMERCIAL_TRAINING).
+    Supports:
+        validate_release_consent(consents_by_signer, signers, purpose)
+        validate_release_consent(recordings, consents_by_recording, signer_by_recording, purpose)
     """
-    for signer_id in recording_signers:
-        if signer_id not in consents_by_signer:
-            raise ConsentDeniedError(
-                f"Signer {signer_id!r} has no registered consent record."
-            )
-        require_consent(consents_by_signer[signer_id], usage_scope, signer_id)
+    if len(args) == 3:
+        consents_by_signer, signers, purpose = args
+        if (
+            not isinstance(consents_by_signer, Mapping)
+            or not isinstance(purpose, ConsentPurpose)
+            or not isinstance(signers, Iterable)
+        ):
+            raise ConsentDeniedError("Invalid arguments to validate_release_consent")
+        for signer_id in signers:
+            if signer_id not in consents_by_signer:
+                raise ConsentDeniedError(f"Participant {signer_id!r} has no registered consent record.")
+            consent = consents_by_signer[signer_id]
+            require_consent(consent, str(signer_id), purpose)
+    elif len(args) == 4:
+        recordings, consents_by_recording, signer_by_recording, purpose = args
+        if (
+            not isinstance(consents_by_recording, Mapping)
+            or not isinstance(signer_by_recording, Mapping)
+            or not isinstance(purpose, ConsentPurpose)
+            or not isinstance(recordings, Iterable)
+        ):
+            raise ConsentDeniedError("Invalid arguments to validate_release_consent")
+        for rec_id in recordings:
+            if rec_id not in consents_by_recording:
+                raise ConsentDeniedError(f"Recording {rec_id!r} has no registered consent record.")
+            consent = consents_by_recording[rec_id]
+            signer = signer_by_recording[rec_id]
+            require_consent(consent, signer, purpose)
+    else:
+        raise ValueError("validate_release_consent expects 3 or 4 positional arguments.")

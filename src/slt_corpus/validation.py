@@ -73,7 +73,7 @@ def validate_annotation_temporal_bounds(
 ) -> None:
     """Validate that annotations do not exceed the parent recording's physical duration."""
     for ann in annotations:
-        if ann.end_ns > max_duration_ns:
+        if ann.end_ns is not None and ann.end_ns > max_duration_ns:
             raise QualityCheckError(
                 f"Annotation {ann.annotation_id!r} end time ({ann.end_ns} ns) "
                 f"exceeds recording duration ({max_duration_ns} ns)."

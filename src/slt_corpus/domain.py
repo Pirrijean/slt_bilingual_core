@@ -47,28 +47,54 @@ class ConsentPurpose(StrEnum):
     """Purposes for which data usage may be authorized."""
 
     RECORD_AND_STORE = "record_and_store"
+    DERIVE_VISUAL_FEATURES = "derive_visual_features"
     DERIVE_LANDMARKS = "derive_landmarks"
     INTERNAL_RESEARCH = "internal_research"
     NONCOMMERCIAL_TRAINING = "noncommercial_training"
     COMMERCIAL_TRAINING = "commercial_training"
     SHARE_WITH_PARTNERS = "share_with_partners"
+    PUBLISH_RAW_MEDIA = "publish_raw_media"
     PUBLISH_RAW_VIDEO = "publish_raw_video"
     PUBLISH_DERIVED_DATA = "publish_derived_data"
+
+
+class ConsentStatus(StrEnum):
+    """Lifecycle status of a consent authorization."""
+
+    ACTIVE = "active"
+    REVOKED = "revoked"
+    EXPIRED = "expired"
+    SUPERSEDED = "superseded"
+
+
+class AlignmentKind(StrEnum):
+    """Temporal alignment semantic kind for annotations."""
+
+    TIME_ALIGNED = "time_aligned"
+    REFERENCE = "reference"
+    UNRESOLVED = "unresolved"
 
 
 class RecordingStatus(StrEnum):
     """Lifecycle status of a recording."""
 
     INGESTED = "ingested"
-    VERIFIED = "verified"
+    TECHNICAL_REVIEW = "technical_review"
+    ANNOTATION_PENDING = "annotation_pending"
+    SECOND_REVIEW = "second_review"
+    ADJUDICATION = "adjudication"
+    APPROVED = "approved"
     REJECTED = "rejected"
-    ARCHIVED = "archived"
+    WITHDRAWN = "withdrawn"
+    VERIFIED = "approved"
+    ARCHIVED = "withdrawn"
 
 
 class AnnotationStatus(StrEnum):
     """Lifecycle status of an annotation or document."""
 
     DRAFT = "draft"
+    SUBMITTED = "submitted"
     REVIEWED = "reviewed"
     ADJUDICATED = "adjudicated"
     REJECTED = "rejected"
@@ -77,9 +103,12 @@ class AnnotationStatus(StrEnum):
 class BoundaryQuality(StrEnum):
     """Temporal boundary precision indicator."""
 
-    EXACT = "exact"
-    APPROXIMATE = "approximate"
-    UNVERIFIED = "unverified"
+    PRECISE = "precise"
+    ESTIMATED = "estimated"
+    UNCERTAIN = "uncertain"
+    EXACT = "precise"
+    APPROXIMATE = "estimated"
+    UNVERIFIED = "uncertain"
 
 
 class ReleaseApprovalStatus(StrEnum):
@@ -202,13 +231,17 @@ class Participant:
     """Pseudonymous participant registry record."""
 
     signer_id: str
-    metadata_json: str
-    created_at_utc: str
+    metadata_json: str = "{}"
+    created_at_utc: str = ""
+    language_experience_band: str | None = None
+    self_reported_linguistic_variant: str | None = None
+    metadata_schema_version: str = "1.0.0"
 
     def __post_init__(self) -> None:
         validate_pseudonym_id(self.signer_id, "signer_id")
         validate_no_direct_identifiers(self.metadata_json)
-        validate_iso8601_utc(self.created_at_utc, "created_at_utc")
+        if self.created_at_utc:
+            validate_iso8601_utc(self.created_at_utc, "created_at_utc")
 
 
 @dataclass(frozen=True, slots=True)
@@ -221,7 +254,9 @@ class ConsentRecord:
     signed_at_utc: str
     granted_purposes: frozenset[ConsentPurpose]
     evidence_sha256: str
+    status: ConsentStatus = ConsentStatus.ACTIVE
     revoked_at_utc: str | None = None
+    expires_at_utc: str | None = None
 
     def __post_init__(self) -> None:
         if not self.consent_id.strip():
@@ -232,14 +267,24 @@ class ConsentRecord:
         validate_iso8601_utc(self.signed_at_utc, "signed_at_utc")
         if self.revoked_at_utc is not None:
             validate_iso8601_utc(self.revoked_at_utc, "revoked_at_utc")
+        if self.expires_at_utc is not None:
+            validate_iso8601_utc(self.expires_at_utc, "expires_at_utc")
         validate_sha256_hash(self.evidence_sha256, "evidence_sha256")
         if not self.granted_purposes:
             raise CorpusValidationError("ConsentRecord must grant at least one purpose.")
+        if self.status == ConsentStatus.REVOKED and self.revoked_at_utc is None:
+            raise CorpusValidationError("Revoked consent must have a revocation timestamp.")
 
-    def permits(self, purpose: ConsentPurpose) -> bool:
-        """Check if purpose is authorized and consent has not been revoked."""
+    def permits(self, purpose: ConsentPurpose, now_utc: str | datetime | None = None) -> bool:
+        """Check if purpose is authorized, active, and unrevoked."""
+        if self.status != ConsentStatus.ACTIVE:
+            return False
         if self.revoked_at_utc is not None:
             return False
+        if self.expires_at_utc is not None and now_utc is not None:
+            now_str = now_utc.isoformat() if isinstance(now_utc, datetime) else str(now_utc)
+            if now_str >= self.expires_at_utc:
+                return False
         return purpose in self.granted_purposes
 
 
@@ -336,38 +381,60 @@ class Asset:
 
 @dataclass(frozen=True, slots=True)
 class Annotation:
-    """Linguistic annotation bounded by a semi-open nanosecond interval [start_ns, end_ns)."""
+    """Linguistic annotation supporting time-aligned, reference, and unresolved semantics."""
 
     annotation_id: str
-    document_id: str
-    tier_id: str
-    start_ns: int
-    end_ns: int
-    value: str
-    parent_annotation_id: str | None = None
-    boundary_quality: BoundaryQuality = BoundaryQuality.UNVERIFIED
-    status: AnnotationStatus = AnnotationStatus.DRAFT
+    document_id: str = ""
+    recording_id: str = ""
+    tier_id: str = ""
+    alignment_kind: AlignmentKind = AlignmentKind.TIME_ALIGNED
+    start_ns: int | None = None
+    end_ns: int | None = None
+    value: str = ""
     annotator_id: str | None = None
     revision: int = 1
+    status: AnnotationStatus = AnnotationStatus.DRAFT
+    boundary_quality: BoundaryQuality = BoundaryQuality.PRECISE
+    parent_annotation_id: str | None = None
+    previous_annotation_id: str | None = None
+    source_annotation_id: str | None = None
 
     def __post_init__(self) -> None:
         if not self.annotation_id.strip():
             raise CorpusValidationError("annotation_id cannot be empty.")
-        if not self.document_id.strip():
-            raise CorpusValidationError("document_id cannot be empty.")
         if not self.tier_id.strip():
             raise CorpusValidationError("tier_id cannot be empty.")
-        if self.start_ns < 0:
-            raise CorpusValidationError("start_ns cannot be negative.")
-        if self.end_ns <= self.start_ns:
-            raise CorpusValidationError(
-                f"Semi-open interval invariant violated: start_ns ({self.start_ns}) "
-                f"must be strictly less than end_ns ({self.end_ns})."
-            )
         if not isinstance(self.value, str):
             raise CorpusValidationError("Annotation value must be a string.")
         if self.revision < 1:
             raise CorpusValidationError("Annotation revision must be >= 1.")
+
+        if self.alignment_kind == AlignmentKind.REFERENCE:
+            if self.start_ns is not None or self.end_ns is not None:
+                raise CorpusValidationError(
+                    "Reference annotations must preserve their original non-aligned semantics."
+                )
+            if self.parent_annotation_id is None:
+                raise CorpusValidationError("Reference annotation requires a parent.")
+        elif self.alignment_kind == AlignmentKind.TIME_ALIGNED:
+            if self.start_ns is None or self.end_ns is None:
+                raise CorpusValidationError("A time-aligned annotation requires both boundaries.")
+            if self.start_ns < 0 or self.end_ns <= self.start_ns:
+                raise CorpusValidationError(
+                    f"Semi-open interval invariant violated: start_ns ({self.start_ns}) "
+                    f"must be non-negative and strictly less than end_ns ({self.end_ns})."
+                )
+        elif self.alignment_kind == AlignmentKind.UNRESOLVED:
+            if self.start_ns is not None and self.start_ns < 0:
+                raise CorpusValidationError("Invalid unresolved start boundary.")
+            if self.end_ns is not None and self.end_ns < 0:
+                raise CorpusValidationError("Invalid unresolved end boundary.")
+            if (
+                self.start_ns is not None
+                and self.end_ns is not None
+                and self.end_ns <= self.start_ns
+            ):
+                raise CorpusValidationError("Invalid partial annotation interval.")
 
 
 @dataclass(frozen=True, slots=True)

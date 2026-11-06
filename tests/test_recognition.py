@@ -41,11 +41,11 @@ def test_classifier_prediction_and_rejection():
     if len(clf.classes) > 0:
         # Known centroid prediction
         dummy_feat = clf.feature_mean.copy()
-        pred, conf, is_valid = clf.predict(dummy_feat)
+        pred, conf, _is_valid = clf.predict(dummy_feat)
         assert isinstance(pred, str)
         assert 0.0 <= conf <= 1.0
 
         # Outlier rejection with extreme values
         extreme_feat = np.ones(106, dtype=np.float32) * 999.0
-        pred_out, conf_out, is_valid_out = clf.predict(extreme_feat)
+        pred_out, _conf_out, is_valid_out = clf.predict(extreme_feat)
         assert pred_out == "_NADA_" or not is_valid_out

@@ -19,6 +19,7 @@ from slt_core.domain import (
     TranslationOutput,
 )
 from slt_core.errors import (
+    ClosedPipelineError,
     ComponentContractError,
     ComponentNotReadyError,
     TimestampOrderError,
@@ -76,7 +77,7 @@ class CorePipeline:
         temporal decoding, and translation.
         """
         if self._is_closed:
-            raise ComponentNotReadyError("Pipeline is closed.")
+            raise ClosedPipelineError("Pipeline is closed.")
 
         if self._bound_source_id is None:
             self._bound_source_id = packet.source_id
@@ -167,7 +168,7 @@ class CorePipeline:
         Flush any remaining pending events from the temporal decoder and update translations.
         """
         if self._is_closed:
-            raise ComponentNotReadyError("Pipeline is closed.")
+            raise ClosedPipelineError("Pipeline is closed.")
         if not self.temporal_decoder.ready:
             raise ComponentNotReadyError("Temporal decoder is not ready.")
         if not self.translator.ready:
@@ -196,12 +197,23 @@ class CorePipeline:
         self.translator.reset()
 
     def close(self) -> None:
-        """Close and release all underlying resources."""
+        """Close and release all underlying resources safely and idempotently."""
         self._is_closed = True
-        self.perception.close()
-        self.recognizer.close()
-        self.temporal_decoder.reset()
-        self.translator.reset()
+        errors: list[Exception] = []
+
+        for comp, action in (
+            (self.perception, "close"),
+            (self.recognizer, "close"),
+            (self.temporal_decoder, "close" if hasattr(self.temporal_decoder, "close") else "reset"),
+            (self.translator, "close" if hasattr(self.translator, "close") else "reset"),
+        ):
+            try:
+                getattr(comp, action)()
+            except Exception as exc:  # noqa: BLE001
+                errors.append(exc)
+
+        if errors:
+            raise ComponentContractError(f"Error(s) occurred while closing pipeline: {errors}")
 
     def _validate_translations(
         self, outputs: Sequence[TranslationOutput]

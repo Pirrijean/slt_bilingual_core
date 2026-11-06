@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import json
 from collections.abc import Mapping, Sequence
+from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -24,8 +25,23 @@ from slt_corpus.domain import (
 from slt_corpus.splits import validate_group_disjoint, validate_no_augmentation_leakage
 
 
-class ReleaseError(Exception):
+class ReleaseValidationError(ValueError):
     """Raised when release construction or gating validation fails."""
+
+
+class ReleaseError(ReleaseValidationError):
+    """Raised when release construction or gating validation fails."""
+
+
+@dataclass(frozen=True, slots=True)
+class RecordingEligibility:
+    """Pre-release compliance and gating status for a single recording."""
+
+    recording: Recording
+    participant_ids: tuple[str, ...]
+    consents_by_signer: dict[str, tuple[ConsentRecord, ...]]
+    quality_status: str
+    linguistic_status: str
 
 
 class DatasetReleaseManager:

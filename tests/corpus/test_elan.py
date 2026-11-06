@@ -6,6 +6,7 @@ from pathlib import Path
 
 import pytest
 
+from slt_corpus.domain import AlignmentKind
 from slt_corpus.elan import EAFImportError, import_eaf, to_slt_annotations
 
 SYNTHETIC_EAF = """<?xml version="1.0" encoding="UTF-8"?>
@@ -54,17 +55,24 @@ def test_import_basic_eaf(tmp_path: Path):
     assert rec_a1.value == "HOLA"
     assert rec_a1.tier_id == "sign_token"
 
-    # Check REF_ANNOTATION inherited timing
+    # Check REF_ANNOTATION non-aligned semantics (no synthetic timing inheritance)
     rec_a3 = next(r for r in records if r.annotation_id == "a3")
-    assert rec_a3.start_ns == 100_000_000
-    assert rec_a3.end_ns == 800_000_000
+    assert rec_a3.start_ns is None
+    assert rec_a3.end_ns is None
+    assert rec_a3.alignment_kind == AlignmentKind.REFERENCE
     assert rec_a3.value == "hola amigo"
-    assert rec_a3.parent_annotation_id == "a1"
+    assert rec_a3.parent_source_annotation_id == "a1"
 
-    # Convert to SLT Annotations
-    slt_anns = to_slt_annotations(records, document_id="doc_test_01")
+    # Convert to SLT Annotations with deterministic UUID5 internal IDs
+    slt_anns = to_slt_annotations(records, document_id="doc_test_01", recording_id="rec_test_01")
     assert len(slt_anns) == 3
     assert slt_anns[0].document_id == "doc_test_01"
+    ann_a1 = next(a for a in slt_anns if a.source_annotation_id == "a1")
+    ann_a3 = next(a for a in slt_anns if a.source_annotation_id == "a3")
+    assert ann_a3.alignment_kind == AlignmentKind.REFERENCE
+    assert ann_a3.start_ns is None
+    assert ann_a3.end_ns is None
+    assert ann_a3.parent_annotation_id == ann_a1.annotation_id
 
 
 def test_import_eaf_missing_timeslot_raises(tmp_path: Path):
