@@ -1,0 +1,169 @@
+{
+  "_info": "Diccionario bilingüe de glosas (ES/EN) para SLT-Core. Agrega señas nuevas aquí o desde la pestaña 'Calibrar' de la interfaz.",
+  "words": {
+    "HOLA": {
+      "type": "interj",
+      "es": "¡Hola!",
+      "en": "Hello!",
+      "category": "Cortesía",
+      "guide": "Mano abierta al frente con los 5 dedos extendidos y separados (quieta o saludando)."
+    },
+    "GRACIAS": {
+      "type": "interj",
+      "es": "Muchas gracias.",
+      "en": "Thank you very much.",
+      "category": "Cortesía",
+      "guide": "Palma plana con los 4 dedos rectos juntos y el pulgar doblado sobre la palma (forma B)."
+    },
+    "POR_FAVOR": {
+      "type": "tail",
+      "es": "por favor",
+      "en": "please",
+      "solo_es": "Por favor.",
+      "solo_en": "Please.",
+      "category": "Cortesía",
+      "guide": "Ambas palmas juntas frente al pecho, o una mano con pulgar y meñique extendidos (forma Y)."
+    },
+    "SI": {
+      "type": "interj",
+      "es": "Sí.",
+      "en": "Yes.",
+      "category": "Respuestas",
+      "guide": "Puño cerrado con el pulgar extendido hacia arriba."
+    },
+    "NO": {
+      "type": "interj",
+      "es": "No.",
+      "en": "No.",
+      "category": "Respuestas",
+      "guide": "Puño cerrado con el pulgar extendido hacia abajo."
+    },
+    "ESTAR_BIEN": {
+      "type": "verb",
+      "es": {"1": "estoy bien", "2": "estás bien", "3": "está bien"},
+      "en": {"1": "am fine", "2": "are fine", "3": "is fine"},
+      "solo_es": "Estoy bien.",
+      "solo_en": "I am fine.",
+      "category": "Respuestas",
+      "guide": "Gesto OK: índice y pulgar unidos en círculo; medio, anular y meñique extendidos arriba."
+    },
+    "TE_QUIERO": {
+      "type": "interj",
+      "es": "Te quiero.",
+      "en": "I love you.",
+      "category": "Expresiones",
+      "guide": "Seña universal ILY: pulgar, índice y meñique extendidos; medio y anular doblados."
+    },
+    "AYUDA": {
+      "type": "word",
+      "es": "ayuda",
+      "en": "help",
+      "solo_es": "¡Necesito ayuda!",
+      "solo_en": "I need help!",
+      "category": "Necesidades",
+      "guide": "Dos manos: coloca un puño o pulgar arriba sobre la palma abierta de la otra mano."
+    },
+    "AGUA": {
+      "type": "word",
+      "es": "agua",
+      "en": "water",
+      "solo_es": "Agua, por favor.",
+      "solo_en": "Water, please.",
+      "category": "Necesidades",
+      "guide": "Letra W: extiende los 3 dedos centrales (índice, medio y anular); dobla pulgar y meñique."
+    },
+    "COMIDA": {
+      "type": "word",
+      "es": "comida",
+      "en": "food",
+      "solo_es": "Comida, por favor.",
+      "solo_en": "Food, please.",
+      "category": "Necesidades",
+      "guide": "Extiende pulgar, índice y medio; mantén doblados anular y meñique."
+    },
+    "BANO": {
+      "type": "word",
+      "es": "el baño",
+      "en": "the bathroom",
+      "solo_es": "¿Dónde está el baño?",
+      "solo_en": "Where is the bathroom?",
+      "category": "Necesidades",
+      "guide": "Seña personalizable desde la pestaña Calibrar (ej. puño con pulgar entre índice y medio)."
+    },
+    "YO": {
+      "type": "pron",
+      "person": 1,
+      "es": "yo",
+      "en": "I",
+      "solo_es": "Soy yo.",
+      "solo_en": "It is me.",
+      "category": "Gramática",
+      "guide": "Forma L: extiende pulgar e índice en ángulo recto; dobla los otros tres dedos."
+    },
+    "TU": {
+      "type": "pron",
+      "person": 2,
+      "es": "tú",
+      "en": "you",
+      "solo_es": "¿Y tú?",
+      "solo_en": "And you?",
+      "category": "Gramática",
+      "guide": "Extiende únicamente el dedo índice hacia arriba."
+    },
+    "QUERER": {
+      "type": "verb",
+      "es": {"1": "quiero", "2": "quieres", "3": "quiere"},
+      "en": {"1": "want", "2": "want", "3": "wants"},
+      "solo_es": "Lo quiero.",
+      "solo_en": "I want it.",
+      "category": "Gramática",
+      "guide": "Mano semicurvada en forma de C o garra suave mirando de lado/frente."
+    },
+    "NECESITAR": {
+      "type": "verb",
+      "es": {"1": "necesito", "2": "necesitas", "3": "necesita"},
+      "en": {"1": "need", "2": "need", "3": "needs"},
+      "solo_es": "Lo necesito.",
+      "solo_en": "I need it.",
+      "category": "Gramática",
+      "guide": "Seña personalizable (ej. dedo índice curvado en gancho hacia abajo)."
+    },
+    "A": {
+      "type": "letter",
+      "category": "Vocales",
+      "guide": "Puño cerrado de frente con el pulgar pegado verticalmente al costado del índice."
+    },
+    "E": {
+      "type": "letter",
+      "category": "Vocales",
+      "guide": "Cuatro dedos flexionados apoyando las puntas sobre el pulgar horizontal."
+    },
+    "I": {
+      "type": "letter",
+      "category": "Vocales",
+      "guide": "Puño cerrado extendiendo únicamente el dedo meñique hacia arriba."
+    },
+    "O": {
+      "type": "letter",
+      "category": "Vocales",
+      "guide": "Todos los dedos curvados uniendo sus puntas con el pulgar formando una O."
+    },
+    "U": {
+      "type": "letter",
+      "category": "Vocales",
+      "guide": "Índice y medio extendidos hacia arriba; pulgar, anular y meñique cerrados."
+    }
+  },
+  "phrases": [
+    {"glosses": ["HOLA", "TU"], "es": "¡Hola! ¿Cómo estás?", "en": "Hello! How are you?"},
+    {"glosses": ["YO", "QUERER", "AGUA"], "es": "Yo quiero agua, por favor.", "en": "I want water, please."},
+    {"glosses": ["YO", "AGUA", "QUERER"], "es": "Yo quiero agua, por favor.", "en": "I want water, please."},
+    {"glosses": ["YO", "QUERER", "COMIDA"], "es": "Yo quiero comida, por favor.", "en": "I want food, please."},
+    {"glosses": ["YO", "AYUDA"], "es": "¡Necesito ayuda urgente!", "en": "I need urgent help!"},
+    {"glosses": ["TU", "AYUDA", "YO"], "es": "¿Puedes ayudarme, por favor?", "en": "Can you help me, please?"},
+    {"glosses": ["YO", "ESTAR_BIEN"], "es": "Yo estoy muy bien.", "en": "I am doing well."},
+    {"glosses": ["TU", "ESTAR_BIEN"], "es": "¿Estás bien?", "en": "Are you okay?"},
+    {"glosses": ["SI", "GRACIAS"], "es": "Sí, muchas gracias.", "en": "Yes, thank you very much."},
+    {"glosses": ["NO", "GRACIAS"], "es": "No, muchas gracias.", "en": "No, thank you very much."}
+  ]
+}

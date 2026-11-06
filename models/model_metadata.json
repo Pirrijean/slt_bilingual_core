@@ -1,0 +1,38 @@
+{
+  "model_name": "SLT Bilingual Core",
+  "model_version": "1.0.0",
+  "feature_extractor": "geometric_106",
+  "feature_dimension": 106,
+  "recognition_algorithm": "weighted_knn",
+  "num_classes": 19,
+  "supported_classes": [
+    "_NADA_",
+    "HOLA",
+    "GRACIAS",
+    "POR_FAVOR",
+    "SI",
+    "NO",
+    "AYUDA",
+    "AGUA",
+    "COMIDA",
+    "ESTAR_BIEN",
+    "TE_QUIERO",
+    "YO",
+    "TU",
+    "QUERER",
+    "A",
+    "E",
+    "I",
+    "O",
+    "U"
+  ],
+  "training_samples": 2660,
+  "groups_count": 4,
+  "evaluation": {
+    "balanced_accuracy": 0.9248120300751879,
+    "macro_f1": 0.9220115905496079,
+    "macro_precision": 0.9317974977202393,
+    "macro_recall": 0.9248120300751879,
+    "test_samples": 665
+  }
+}
