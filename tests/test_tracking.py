@@ -83,6 +83,25 @@ def test_reordered_observations_preserve_id():
     assert t1[1].tracking_id == left_id
 
 
+def test_temporary_occlusion_retains_id():
+    tracker = HandTracker(max_missed_frames=5)
+    h0 = make_hand(x=0.5, side=Handedness.RIGHT)
+    t0 = tracker.update(frame_index=0, observations=[h0])
+    orig_id = t0[0].tracking_id
+    assert orig_id is not None
+
+    # Temporary occlusion / disappearance for 3 frames (< 5 max_missed_frames)
+    _ = tracker.update(frame_index=1, observations=[])
+    _ = tracker.update(frame_index=2, observations=[])
+    _ = tracker.update(frame_index=3, observations=[])
+
+    # Hand reappears at frame 4 at proximate location (x=0.51) -> retains orig_id
+    h4 = make_hand(x=0.51, side=Handedness.RIGHT)
+    t4 = tracker.update(frame_index=4, observations=[h4])
+    assert len(t4) == 1
+    assert t4[0].tracking_id == orig_id
+
+
 def test_track_expiration_after_max_missed_frames():
     tracker = HandTracker(max_missed_frames=5)
     h = make_hand(x=0.5, side=Handedness.RIGHT)

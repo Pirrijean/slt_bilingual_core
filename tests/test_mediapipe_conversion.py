@@ -60,6 +60,30 @@ def test_convert_empty_or_none_result():
     assert convert_mediapipe_result(empty_res) == ()
 
 
+def test_convert_inconsistent_arrays_fallback():
+    # Inconsistent arrays: 2 hands detected, but only 1 handedness category and 0 world landmarks
+    cat_left = SimpleNamespace(category_name="Left", score=0.91)
+    inconsistent_res = SimpleNamespace(
+        hand_landmarks=[make_points(0.1), make_points(0.6)],
+        hand_world_landmarks=[],  # Empty world landmarks
+        handedness=[[cat_left]],   # Only 1 handedness item for 2 hands
+    )
+    obs = convert_mediapipe_result(inconsistent_res)
+    assert len(obs) == 2
+
+    # Hand 0 has handedness info and world landmarks fallback to image landmarks
+    assert obs[0].handedness == Handedness.LEFT
+    assert obs[0].handedness_score == 0.91
+    assert len(obs[0].landmarks) == 21
+    assert len(obs[0].world_landmarks) == 21
+
+    # Hand 1 gracefully falls back to UNKNOWN and score None
+    assert obs[1].handedness == Handedness.UNKNOWN
+    assert obs[1].handedness_score is None
+    assert len(obs[1].landmarks) == 21
+    assert len(obs[1].world_landmarks) == 21
+
+
 def test_model_asset_verification(tmp_path):
     import json
 
