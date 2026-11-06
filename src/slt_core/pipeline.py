@@ -62,6 +62,7 @@ class CorePipeline:
         self.phrase_buffer = PhraseBuffer()
         self._last_frame_index_by_source: dict[str, int] = {}
         self._last_timestamp_by_source: dict[str, int] = {}
+        self._bound_source_id: str | None = None
         self._is_closed: bool = False
 
     @property
@@ -76,6 +77,11 @@ class CorePipeline:
         """
         if self._is_closed:
             raise ComponentNotReadyError("Pipeline is closed.")
+
+        if self._bound_source_id is None:
+            self._bound_source_id = packet.source_id
+        elif packet.source_id != self._bound_source_id:
+            raise ComponentContractError("One CorePipeline instance must process one source.")
 
         if not self.perception.ready:
             raise ComponentNotReadyError("Perception backend is not ready.")

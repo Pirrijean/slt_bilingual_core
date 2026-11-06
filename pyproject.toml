@@ -16,6 +16,10 @@ dev = [
     "ruff>=0.8",
     "mypy>=1.13"
 ]
+vision = [
+    "mediapipe==1.2.2",
+    "av==19.0.2"
+]
 desktop = [
     "numpy>=1.24.0",
     "opencv-python>=4.8.0",
@@ -46,3 +50,11 @@ target-version = "py312"
 [tool.mypy]
 python_version = "3.12"
 strict = true
+
+[[tool.mypy.overrides]]
+module = [
+    "mediapipe.*",
+    "cv2.*",
+    "av.*",
+]
+ignore_missing_imports = true

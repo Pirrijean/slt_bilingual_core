@@ -1,0 +1,53 @@
+name: Phase 2 Vision & Perception CI
+
+on:
+  push:
+    branches:
+      - main
+      - "feature/**"
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  vision-tests:
+    name: Vision Tests (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - windows-latest
+          - ubuntu-24.04
+          - macos-15
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install system dependencies (Ubuntu)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgl1 libglib2.0-0
+
+      - name: Upgrade pip & install package with vision support
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[vision,dev]"
+
+      - name: Lint with Ruff
+        run: |
+          ruff check src/slt_core tools
+
+      - name: Type check with Mypy
+        run: |
+          mypy src/slt_core
+
+      - name: Run perception test suite
+        run: |
+          pytest -ra tests/test_tracking.py tests/test_geometry.py tests/test_motion.py tests/test_image_validation.py tests/test_video_timestamps.py tests/test_mediapipe_conversion.py tests/test_camera_source.py tests/test_video_source.py

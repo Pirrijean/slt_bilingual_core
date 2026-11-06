@@ -42,45 +42,48 @@ def test_hand_observation_valid():
         handedness=Handedness.RIGHT,
         landmarks=make_landmarks(21),
         world_landmarks=make_landmarks(21),
-        detection_score=0.95,
+        handedness_score=0.98,
     )
     assert obs.tracking_id == 1
     assert obs.handedness == Handedness.RIGHT
     assert len(obs.landmarks) == 21
     assert len(obs.world_landmarks) == 21
-    assert obs.detection_score == 0.95
+    assert obs.handedness_score == 0.98
 
 
 def test_hand_observation_invalid():
     # Negative tracking ID
-    with pytest.raises(ValidationError, match="Tracking ID"):
+    with pytest.raises(ValidationError, match="tracking_id cannot be negative"):
         HandObservation(
             tracking_id=-1,
             handedness=Handedness.LEFT,
             landmarks=make_landmarks(21),
+            world_landmarks=make_landmarks(21),
         )
     # Incorrect landmark count
-    with pytest.raises(ValidationError, match="21 landmarks"):
+    with pytest.raises(ValidationError, match="21 image landmarks"):
         HandObservation(
             tracking_id=0,
             handedness=Handedness.LEFT,
             landmarks=make_landmarks(20),
+            world_landmarks=make_landmarks(21),
         )
     # Incorrect world landmark count
-    with pytest.raises(ValidationError, match="21 points"):
+    with pytest.raises(ValidationError, match="21 world landmarks"):
         HandObservation(
             tracking_id=0,
             handedness=Handedness.LEFT,
             landmarks=make_landmarks(21),
             world_landmarks=make_landmarks(10),
         )
-    # Invalid detection score
-    with pytest.raises(ValidationError, match="score"):
+    # Invalid handedness score
+    with pytest.raises(ValidationError, match="handedness_score"):
         HandObservation(
             tracking_id=0,
             handedness=Handedness.LEFT,
             landmarks=make_landmarks(21),
-            detection_score=1.5,
+            world_landmarks=make_landmarks(21),
+            handedness_score=1.5,
         )
 
 
@@ -90,19 +93,25 @@ def test_frame_packet_valid():
         frame_index=0,
         timestamp_ns=1000,
         image=None,
+        pixel_format="BGR24",
+        timestamp_kind="monotonic",
     )
     assert packet.source_id == "cam_0"
     assert packet.frame_index == 0
     assert packet.timestamp_ns == 1000
+    assert packet.pixel_format == "BGR24"
+    assert packet.timestamp_kind == "monotonic"
 
 
 def test_frame_packet_invalid():
-    with pytest.raises(ValidationError, match="Source ID"):
+    with pytest.raises(ValidationError, match="source_id"):
         FramePacket(source_id="  ", frame_index=0, timestamp_ns=0)
-    with pytest.raises(ValidationError, match="Frame index"):
+    with pytest.raises(ValidationError, match="frame_index"):
         FramePacket(source_id="cam", frame_index=-1, timestamp_ns=0)
-    with pytest.raises(ValidationError, match="Timestamp"):
+    with pytest.raises(ValidationError, match="timestamp_ns"):
         FramePacket(source_id="cam", frame_index=0, timestamp_ns=-5)
+    with pytest.raises(ValidationError, match="timestamp_kind"):
+        FramePacket(source_id="cam", frame_index=0, timestamp_ns=0, timestamp_kind="invalid_kind")
 
 
 def test_perception_frame_valid_and_invalid():

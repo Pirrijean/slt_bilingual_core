@@ -38,23 +38,28 @@ class Landmark:
 @dataclass(frozen=True, slots=True)
 class HandObservation:
     """Anatomical observation of a single hand."""
-    tracking_id: int
+    # ID asignado por SLT HandTracker.
+    tracking_id: int | None
     handedness: Handedness
+    # Coordenadas normalizadas de imagen.
     landmarks: tuple[Landmark, ...]
-    world_landmarks: tuple[Landmark, ...] = ()
-    detection_score: float | None = None
+    # Coordenadas tridimensionales de mundo.
+    world_landmarks: tuple[Landmark, ...]
+    # Score de la clasificación Left/Right.
+    # NO es una confianza general de todos los landmarks.
+    handedness_score: float | None = None
 
     def __post_init__(self) -> None:
-        if self.tracking_id < 0:
-            raise ValidationError("Tracking ID must be non-negative.")
         if len(self.landmarks) != 21:
-            raise ValidationError(f"Hand must have 21 landmarks, got {len(self.landmarks)}.")
-        if self.world_landmarks and len(self.world_landmarks) != 21:
-            raise ValidationError(f"World landmarks must have 21 points, got {len(self.world_landmarks)}.")
-        if self.detection_score is not None and (
-            not isfinite(self.detection_score) or not (0.0 <= self.detection_score <= 1.0)
+            raise ValidationError("A hand must contain 21 image landmarks.")
+        if len(self.world_landmarks) != 21:
+            raise ValidationError("A hand must contain 21 world landmarks.")
+        if self.tracking_id is not None and self.tracking_id < 0:
+            raise ValidationError("tracking_id cannot be negative.")
+        if self.handedness_score is not None and (
+            not isfinite(self.handedness_score) or not (0.0 <= self.handedness_score <= 1.0)
         ):
-            raise ValidationError("Detection score must be between 0.0 and 1.0.")
+            raise ValidationError("handedness_score must be between 0.0 and 1.0.")
 
 
 @dataclass(frozen=True, slots=True)
@@ -63,16 +68,28 @@ class FramePacket:
     source_id: str
     frame_index: int
     timestamp_ns: int
-    image: bytes | object | None = None
+    # Imagen BGR uint8 en formato H x W x 3.
+    image: object = None
+    pixel_format: str = "BGR24"
+    # monotonic: cámara en vivo.
+    # presentation: tiempo del vídeo obtenido mediante PTS.
+    timestamp_kind: str = "monotonic"
+    # Información de origen del vídeo.
+    # Se conserva para auditoría y sincronización.
+    presentation_pts: int | None = None
+    time_base_num: int | None = None
+    time_base_den: int | None = None
     metadata: Mapping[str, object] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         if not self.source_id.strip():
-            raise ValidationError("Source ID cannot be empty.")
+            raise ValidationError("source_id cannot be empty.")
         if self.frame_index < 0:
-            raise ValidationError("Frame index must be non-negative.")
+            raise ValidationError("frame_index cannot be negative.")
         if self.timestamp_ns < 0:
-            raise ValidationError("Timestamp must be non-negative.")
+            raise ValidationError("timestamp_ns cannot be negative.")
+        if self.timestamp_kind not in ("monotonic", "presentation"):
+            raise ValidationError(f"Invalid timestamp_kind: {self.timestamp_kind}")
 
 
 @dataclass(frozen=True, slots=True)

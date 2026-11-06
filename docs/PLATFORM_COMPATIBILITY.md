@@ -22,24 +22,15 @@
 
 Para evitar el acoplamiento a sistemas operativos específicos, ningún componente del núcleo (`slt_core`) ni de la lógica de negocio podrá invocar directamente constantes o librerías dependientes de la plataforma.
 
-### Arquitectura de Abstracción (`src/slt/platform/`)
-```
-src/slt/platform/
-├── __init__.py         # Fábrica y resolución dinámica de plataforma
-├── capabilities.py     # Detección de aceleración por hardware, cámaras y audio
-├── camera.py           # Abstracción de captura de fotogramas según SO
-├── speech.py           # Abstracción de síntesis de voz (SAPI5, macOS native, espeak-ng)
-└── paths.py            # Resolución de directorios de usuario, caché y modelos
-```
-
-### Regla de Codificación Innegociable
-```python
-# PROHIBIDO dentro del núcleo o adaptadores:
-camera = cv2.VideoCapture(0, cv2.CAP_DSHOW)
-
-# PERMITIDO (desacoplado y multiplataforma):
-camera = platform_camera.open_default()
-```
+### Implementación en Fase 2A (`slt_core.sources`)
+- **`CameraSource` (`src/slt_core/sources/camera.py`):**
+  - Resuelve dinámicamente la lista ordenada de backends OpenCV según el sistema operativo detectado (`sys.platform`):
+    - Windows: `[cv2.CAP_DSHOW, cv2.CAP_MSMF, cv2.CAP_ANY]`
+    - macOS: `[cv2.CAP_AVFOUNDATION, cv2.CAP_ANY]`
+    - Linux / otros: `[cv2.CAP_V4L2, cv2.CAP_ANY]`
+  - Permite inyección de dobles de prueba mediante `capture_factory` para pruebas en entornos headless o CI sin periféricos.
+- **`VideoSource` (`src/slt_core/sources/video.py`):**
+  - Utiliza PyAV para enlace directo y multiplataforma con libavformat/libavcodec (FFmpeg), preservando marcas de tiempo de presentación (PTS) en nanosegundos en cualquier sistema operativo.
 
 ---
 

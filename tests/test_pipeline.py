@@ -233,7 +233,14 @@ def test_frame_index_and_timestamp_monotonicity(test_profile: LanguageProfile):
 
 
 def test_multi_source_isolation(test_profile: LanguageProfile):
-    pipeline = CorePipeline(
+    pipeline_a = CorePipeline(
+        perception=FakePerception(),
+        recognizer=FakeRecognizer(),
+        temporal_decoder=FakeTemporalDecoder(),
+        translator=FakeTranslator(),
+        profile=test_profile,
+    )
+    pipeline_b = CorePipeline(
         perception=FakePerception(),
         recognizer=FakeRecognizer(),
         temporal_decoder=FakeTemporalDecoder(),
@@ -241,17 +248,21 @@ def test_multi_source_isolation(test_profile: LanguageProfile):
         profile=test_profile,
     )
 
-    # Source A at index 10, ts 10000
-    res_a = pipeline.process_frame(make_packet(frame_index=10, timestamp_ns=10000, source_id="cam_A"))
+    # Pipeline A binds to cam_A
+    res_a = pipeline_a.process_frame(make_packet(frame_index=10, timestamp_ns=10000, source_id="cam_A"))
     assert res_a.source_id == "cam_A"
 
-    # Source B at index 1, ts 1000 (earlier than A, but valid for B)
-    res_b = pipeline.process_frame(make_packet(frame_index=1, timestamp_ns=1000, source_id="cam_B"))
+    # Pipeline B binds to cam_B independently
+    res_b = pipeline_b.process_frame(make_packet(frame_index=1, timestamp_ns=1000, source_id="cam_B"))
     assert res_b.source_id == "cam_B"
 
-    # Continuing Source A
-    res_a2 = pipeline.process_frame(make_packet(frame_index=11, timestamp_ns=11000, source_id="cam_A"))
+    # Continuing Pipeline A with cam_A is valid
+    res_a2 = pipeline_a.process_frame(make_packet(frame_index=11, timestamp_ns=11000, source_id="cam_A"))
     assert res_a2.frame_index == 11
+
+    # Sending a different source to Pipeline A raises ComponentContractError
+    with pytest.raises(ComponentContractError, match="One CorePipeline instance must process one source"):
+        pipeline_a.process_frame(make_packet(frame_index=12, timestamp_ns=12000, source_id="cam_B"))
 
 
 def test_decoder_contract_validation(test_profile: LanguageProfile):
