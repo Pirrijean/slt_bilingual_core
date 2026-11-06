@@ -1,18 +1,22 @@
 [build-system]
-requires = ["setuptools>=68.0"]
+requires = ["setuptools>=75"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "slt-bilingual-core"
-version = "1.0.0"
-description = "Bilingual sign language recognition and translation application (ES/EN)"
-readme = "README.md"
-requires-python = ">=3.12,<3.13"
-license = { text = "MIT" }
-authors = [
-    { name = "Pirrijean", email = "jp.ninor1@uniandes.edu.co" }
+version = "0.1.0"
+description = "Multilingual continuous sign recognition and translation core"
+requires-python = ">=3.12"
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-cov>=5.0",
+    "ruff>=0.8",
+    "mypy>=1.13"
 ]
-dependencies = [
+desktop = [
     "numpy>=1.24.0",
     "opencv-python>=4.8.0",
     "mediapipe==1.2.2",
@@ -21,14 +25,7 @@ dependencies = [
     "pyttsx3>=2.90"
 ]
 
-[project.optional-dependencies]
-dev = [
-    "pytest>=8.0.0",
-    "pytest-cov>=5.0.0"
-]
-
 [project.scripts]
-slt = "app:main"
 slt-desktop = "slt_desktop.main_window:main"
 
 [tool.setuptools]
@@ -39,5 +36,13 @@ where = ["src"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-python_files = ["test_*.py"]
+addopts = "-ra"
 pythonpath = ["src"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+
+[tool.mypy]
+python_version = "3.12"
+strict = true

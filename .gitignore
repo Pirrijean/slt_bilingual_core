@@ -2,41 +2,54 @@
 __pycache__/
 *.py[cod]
 *.pyd
-*.egg-info/
-dist/
-build/
+*.so
 
-# Virtual environment
+# Environments
 .venv/
 venv/
 env/
 
-# IDE
-.vscode/
-.idea/
+# Packaging
+build/
+dist/
+*.egg-info/
 
-# Testing
+# Tests & Quality
 .pytest_cache/
 .coverage
 htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# IDE
+.idea/
+.vscode/
+
+# Operating systems
+.DS_Store
+Thumbs.db
 
 # Logs
-logs/
 *.log
+logs/
 
-# Temporary
+# Temporary files
 *.tmp
 *.bak
+prompt_code_reference.txt
+step990_prompt.txt
+audit_environment.txt
+repository_inventory.txt
 _backup_original/
 
-# Local configuration
+# Personal configuration
 .env
 .env.*
 
-# Local audit files
-audit_environment.txt
-repository_inventory.txt
+# Personal datasets
+data/raw/
+data/private/
+data/participants/
 
-# OS
-.DS_Store
-Thumbs.db
+# Local generated profiles
+user_profiles/
