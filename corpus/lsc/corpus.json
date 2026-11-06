@@ -1,0 +1,17 @@
+{
+  "schema_version": "1.0.0",
+  "corpus_id": "lsc-corpus",
+  "display_name": "SLT Colombian Sign Language Corpus",
+  "profile_id": "lsc",
+  "corpus_version": "0.1.0",
+  "status": "development",
+  "target_languages": ["es-CO", "en-US"],
+  "annotation_schema_version": "1.0.0",
+  "language_validation_status": "pending",
+  "community_governance_status": "pending",
+  "legal_review_status": "pending",
+  "data_retention_policy_version": null,
+  "capture_protocol_versions": ["continuous_v1"],
+  "lexicon_version": "0.1.0",
+  "description": "Foundational corpus for Colombian Sign Language (LSC) research, perception benchmarking, and continuous sign translation."
+}

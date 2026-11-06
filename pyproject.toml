@@ -31,6 +31,7 @@ desktop = [
 
 [project.scripts]
 slt-desktop = "slt_desktop.main_window:main"
+slt-corpus = "slt_corpus.cli:main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}

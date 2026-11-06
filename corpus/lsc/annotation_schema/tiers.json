@@ -1,0 +1,111 @@
+{
+  "schema_version": "1.0.0",
+  "profile_id": "lsc",
+  "tiers": [
+    {
+      "tier_id": "utterance",
+      "level": "utterance",
+      "alignment": "time_interval",
+      "parent_tier": null,
+      "description": "Communicative unit and sentence-level discourse boundary."
+    },
+    {
+      "tier_id": "translation_es",
+      "level": "translation",
+      "alignment": "reference",
+      "parent_tier": "utterance",
+      "description": "Human-validated Colombian Spanish (es-CO) translation."
+    },
+    {
+      "tier_id": "translation_en",
+      "level": "translation",
+      "alignment": "reference",
+      "parent_tier": "utterance",
+      "description": "Human-validated US English (en-US) translation."
+    },
+    {
+      "tier_id": "sign_token",
+      "level": "sign",
+      "alignment": "time_interval",
+      "parent_tier": "utterance",
+      "description": "Time-aligned sign token representing individual sign duration."
+    },
+    {
+      "tier_id": "sign_gloss",
+      "level": "lexical",
+      "alignment": "reference",
+      "parent_tier": "sign_token",
+      "description": "Standardized uppercase annotation label for the sign."
+    },
+    {
+      "tier_id": "lexical_entry",
+      "level": "lexical",
+      "alignment": "reference",
+      "parent_tier": "sign_token",
+      "description": "Stable identifier linked to the active LSC lexicon."
+    },
+    {
+      "tier_id": "left_handshape",
+      "level": "manual",
+      "alignment": "time_interval",
+      "parent_tier": "utterance",
+      "description": "Observed left hand configuration."
+    },
+    {
+      "tier_id": "right_handshape",
+      "level": "manual",
+      "alignment": "time_interval",
+      "parent_tier": "utterance",
+      "description": "Observed right hand configuration."
+    },
+    {
+      "tier_id": "hand_movement",
+      "level": "manual",
+      "alignment": "time_interval",
+      "parent_tier": "utterance",
+      "description": "Observed trajectory, path, and articulation movement."
+    },
+    {
+      "tier_id": "hand_orientation",
+      "level": "manual",
+      "alignment": "time_interval",
+      "parent_tier": "utterance",
+      "description": "Observed palm and finger orientation in space."
+    },
+    {
+      "tier_id": "hand_location",
+      "level": "manual",
+      "alignment": "time_interval",
+      "parent_tier": "utterance",
+      "description": "Signing space location (head, chest, neutral space)."
+    },
+    {
+      "tier_id": "facial_nonmanual",
+      "level": "nonmanual",
+      "alignment": "time_interval",
+      "parent_tier": "utterance",
+      "description": "Non-manual facial behavior (eyebrow raise, furrow, squint)."
+    },
+    {
+      "tier_id": "head_movement",
+      "level": "nonmanual",
+      "alignment": "time_interval",
+      "parent_tier": "utterance",
+      "description": "Head nod, shake, tilt, or thrust."
+    },
+    {
+      "tier_id": "eye_gaze",
+      "level": "nonmanual",
+      "alignment": "time_interval",
+      "parent_tier": "utterance",
+      "description": "Gaze direction (interlocutor, hands, spatial locus)."
+    },
+    {
+      "tier_id": "body_posture",
+      "level": "nonmanual",
+      "alignment": "time_interval",
+      "parent_tier": "utterance",
+      "description": "Torso lean, shift, or rotation indicating grammatical role."
+    }
+  ]
+}

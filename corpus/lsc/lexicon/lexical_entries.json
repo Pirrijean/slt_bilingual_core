@@ -1,0 +1,72 @@
+{
+  "schema_version": "1.0.0",
+  "lexicon_version": "0.1.0",
+  "profile_id": "lsc",
+  "entries": [
+    {
+      "lexical_id": "LSC_HOLA_001",
+      "gloss_lsc": "HOLA",
+      "es_translations": ["hola", "buenos días", "buenas tardes"],
+      "en_translations": ["hello", "hi", "greetings"],
+      "handshape_l": null,
+      "handshape_r": "B_OPEN",
+      "movement": "WAVE_PALM_FORWARD",
+      "orientation": "PALM_FORWARD",
+      "location": "temple",
+      "is_two_handed": false,
+      "metadata_json": "{\"category\":\"greeting\"}"
+    },
+    {
+      "lexical_id": "LSC_GRACIAS_001",
+      "gloss_lsc": "GRACIAS",
+      "es_translations": ["gracias", "muchas gracias"],
+      "en_translations": ["thank you", "thanks"],
+      "handshape_l": null,
+      "handshape_r": "FLAT_HAND",
+      "movement": "CHIN_FORWARD",
+      "orientation": "PALM_TOWARD_CHEST",
+      "location": "chin",
+      "is_two_handed": false,
+      "metadata_json": "{\"category\":\"courtesy\"}"
+    },
+    {
+      "lexical_id": "LSC_POR_FAVOR_001",
+      "gloss_lsc": "POR-FAVOR",
+      "es_translations": ["por favor"],
+      "en_translations": ["please"],
+      "handshape_l": "FLAT_HAND",
+      "handshape_r": "FLAT_HAND",
+      "movement": "CIRCULAR_RUB",
+      "orientation": "PALM_TOWARD_CHEST",
+      "location": "chest",
+      "is_two_handed": true,
+      "metadata_json": "{\"category\":\"courtesy\"}"
+    },
+    {
+      "lexical_id": "LSC_BIEN_001",
+      "gloss_lsc": "BIEN",
+      "es_translations": ["bien", "de acuerdo"],
+      "en_translations": ["good", "well", "fine"],
+      "handshape_l": null,
+      "handshape_r": "THUMB_UP",
+      "movement": "FORWARD_THRUST",
+      "orientation": "THUMB_UP_PALM_LEFT",
+      "location": "neutral_space",
+      "is_two_handed": false,
+      "metadata_json": "{\"category\":\"descriptor\"}"
+    },
+    {
+      "lexical_id": "LSC_AYUDA_001",
+      "gloss_lsc": "AYUDA",
+      "es_translations": ["ayuda", "ayudar", "auxilio"],
+      "en_translations": ["help", "assist"],
+      "handshape_l": "FLAT_UPWARD",
+      "handshape_r": "FIST_THUMB_UP",
+      "movement": "UPWARD_LIFT",
+      "orientation": "PALM_UP",
+      "location": "chest",
+      "is_two_handed": true,
+      "metadata_json": "{\"category\":\"action\"}"
+    }
+  ]
+}
