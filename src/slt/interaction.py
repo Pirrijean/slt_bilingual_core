@@ -84,13 +84,15 @@ class SLTInteractionEngine(QObject):
         raw_prediction: str,
         confidence: float,
         is_valid: bool,
-        handedness: str = "Right"
+        handedness: str = "Right",
+        custom_timestamp_sec: Optional[float] = None
     ) -> InteractionState:
         """
         Process a single frame prediction through the state machine.
+        Allows custom_timestamp_sec for offline video file analysis.
         Returns the current InteractionState.
         """
-        now = time.time()
+        now = time.time() if custom_timestamp_sec is None else float(custom_timestamp_sec)
 
         # Transition to IDLE if no hands are visible
         if not has_hands:

@@ -56,3 +56,23 @@ def test_timeline_operations():
 
     engine.clear_timeline()
     assert len(engine.get_timeline()) == 0
+
+
+def test_custom_video_timestamp_tracking():
+    engine = SLTInteractionEngine(window_size=3, quorum_count=2, min_hold_seconds=0.1)
+    confirmed = []
+    engine.sign_confirmed.connect(lambda ev: confirmed.append(ev))
+
+    # Simulate video frames with explicit timestamps:
+    # Frame 1 (t=2.0s): Tracks hand
+    engine.process_frame(True, "AYUDA", 0.95, True, custom_timestamp_sec=2.0)
+    # Frame 2 (t=2.1s): Becomes candidate, marks start time
+    engine.process_frame(True, "AYUDA", 0.95, True, custom_timestamp_sec=2.1)
+    # Frame 3 (t=2.3s): Holds for 0.2s >= min_hold_seconds (0.1s) -> Confirms
+    engine.process_frame(True, "AYUDA", 0.95, True, custom_timestamp_sec=2.3)
+
+    assert len(confirmed) == 1
+    ev = confirmed[0]
+    assert ev.label == "AYUDA"
+    assert ev.timestamp_start == 2.1
+    assert pytest.approx(ev.timestamp_end, rel=1e-3) == 2.3

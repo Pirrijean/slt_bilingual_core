@@ -233,3 +233,110 @@ class BilingualTranslator:
             en_text += "."
 
         return es_text, en_text
+
+
+def format_srt_time(seconds: float) -> str:
+    """Format float seconds to SRT timecode standard: HH:MM:SS,mmm"""
+    sec_int = int(seconds)
+    millis = int(round((seconds - sec_int) * 1000))
+    if millis >= 1000:
+        millis = 999
+    hours = sec_int // 3600
+    minutes = (sec_int % 3600) // 60
+    secs = sec_int % 60
+    return f"{hours:02d}:{minutes:02d}:{secs:02d},{millis:03d}"
+
+
+def generate_srt(
+    events: List[Any],
+    es_translation: str,
+    en_translation: str
+) -> Dict[str, str]:
+    """
+    Generate standard SRT formatted subtitles for video analysis results.
+    Returns dictionary with 'bilingual', 'es', and 'en' SRT texts.
+    """
+    if not events:
+        return {"bilingual": "", "es": "", "en": ""}
+
+    t_start_global = min(e.timestamp_start for e in events)
+    t_end_global = max(e.timestamp_end for e in events)
+
+    # 1. Bilingual composite SRT
+    bilingual_lines = [
+        "1",
+        f"{format_srt_time(t_start_global)} --> {format_srt_time(t_end_global)}",
+        f"ES: {es_translation}",
+        f"EN: {en_translation}",
+        ""
+    ]
+
+    # 2. Spanish only SRT
+    es_lines = [
+        "1",
+        f"{format_srt_time(t_start_global)} --> {format_srt_time(t_end_global)}",
+        es_translation,
+        ""
+    ]
+
+    # 3. English only SRT
+    en_lines = [
+        "1",
+        f"{format_srt_time(t_start_global)} --> {format_srt_time(t_end_global)}",
+        en_translation,
+        ""
+    ]
+
+    # 4. Detailed Gloss Sequence SRT
+    gloss_lines = []
+    for idx, ev in enumerate(events, start=1):
+        gloss_lines.extend([
+            str(idx),
+            f"{format_srt_time(ev.timestamp_start)} --> {format_srt_time(ev.timestamp_end)}",
+            f"[{ev.label}]",
+            ""
+        ])
+
+    return {
+        "bilingual": "\n".join(bilingual_lines),
+        "es": "\n".join(es_lines),
+        "en": "\n".join(en_lines),
+        "glosses": "\n".join(gloss_lines)
+    }
+
+
+def generate_transcription_txt(
+    events: List[Any],
+    es_translation: str,
+    en_translation: str,
+    source_name: str = "Video"
+) -> str:
+    """Generate structured plain text transcription report."""
+    lines = [
+        "============================================================",
+        f"SLT BILINGUAL CORE · REPORTE DE TRADUCCIÓN DE VIDEO",
+        f"Fuente: {source_name}",
+        "============================================================",
+        "",
+        "--- SECUENCIA DE SEÑAS DETECTADAS ---"
+    ]
+
+    if events:
+        for ev in events:
+            mins_s = int(ev.timestamp_start // 60)
+            secs_s = int(ev.timestamp_start % 60)
+            mins_e = int(ev.timestamp_end // 60)
+            secs_e = int(ev.timestamp_end % 60)
+            lines.append(f"{mins_s:02d}:{secs_s:02d} – {mins_e:02d}:{secs_e:02d} | {ev.label} (duración: {ev.duration_seconds:.1f}s)")
+    else:
+        lines.append("(No se detectaron señas en el archivo)")
+
+    lines.extend([
+        "",
+        "--- TRADUCCIÓN BILINGÜE CONSOLIDADA ---",
+        f"Español: {es_translation or '...'}",
+        f"English: {en_translation or '...'}",
+        "",
+        "============================================================"
+    ])
+    return "\n".join(lines)

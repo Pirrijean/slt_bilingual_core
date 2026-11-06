@@ -119,9 +119,10 @@ class SpeechWorker(QObject):
     """PySide6 QObject wrapper for UI signal integration."""
     speech_enqueued = Signal(str, str)
 
-    def __init__(self, mode: str = "both"):
+    def __init__(self, mode: str = "both", auto_speak: bool = False):
         super().__init__()
         self.engine = SpeechEngine(mode=mode)
+        self.auto_speak = auto_speak
 
     def speak(self, es_text: str, en_text: str):
         self.engine.speak(es_text, en_text)
@@ -129,6 +130,9 @@ class SpeechWorker(QObject):
 
     def set_mode(self, mode: str):
         self.engine.set_mode(mode)
+
+    def set_auto_speak(self, enabled: bool):
+        self.auto_speak = bool(enabled)
 
     def stop(self):
         self.engine.stop()

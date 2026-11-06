@@ -50,3 +50,26 @@ def test_accumulator_operations():
     assert translator.gloss_buffer == ["HOLA"]
     translator.clear()
     assert len(translator.gloss_buffer) == 0
+
+
+def test_srt_generation_and_formatting():
+    from slt.interaction import SignEvent
+    from slt.language import format_srt_time, generate_srt, generate_transcription_txt
+
+    assert format_srt_time(0.0) == "00:00:00,000"
+    assert format_srt_time(62.5) == "00:01:02,500"
+
+    ev1 = SignEvent("e1", "YO", 1.0, 2.5, 0.95)
+    ev2 = SignEvent("e2", "AGUA", 3.0, 4.2, 0.98)
+    srts = generate_srt([ev1, ev2], "Yo quiero agua.", "I want water.")
+
+    assert "bilingual" in srts
+    assert "00:00:01,000 --> 00:00:04,200" in srts["bilingual"]
+    assert "ES: Yo quiero agua." in srts["bilingual"]
+    assert "EN: I want water." in srts["bilingual"]
+
+    txt = generate_transcription_txt([ev1, ev2], "Yo quiero agua.", "I want water.", "test.mp4")
+    assert "test.mp4" in txt
+    assert "YO" in txt
+    assert "AGUA" in txt
+    assert "Español: Yo quiero agua." in txt
