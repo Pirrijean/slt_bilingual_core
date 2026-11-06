@@ -90,26 +90,26 @@ class MainWindow(QMainWindow):
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
         main_layout = QVBoxLayout(central_widget)
-        main_layout.setContentsMargins(18, 14, 18, 14)
-        main_layout.setSpacing(12)
+        main_layout.setContentsMargins(16, 12, 16, 12)
+        main_layout.setSpacing(10)
 
         # -------------------------------------------------------------
-        # 1. Header Toolbar
+        # 1. Barra Superior: Identidad del Producto y Estado
         # -------------------------------------------------------------
         header_card = QFrame()
         header_card.setObjectName("HeaderCard")
         header_layout = QHBoxLayout(header_card)
-        header_layout.setContentsMargins(16, 10, 16, 10)
-        header_layout.setSpacing(16)
+        header_layout.setContentsMargins(14, 8, 14, 8)
+        header_layout.setSpacing(14)
 
         # Brand Title & Mode Badge
         brand_box = QHBoxLayout()
-        brand_box.setSpacing(10)
-        app_title = QLabel("SLT BILINGUAL")
-        app_title.setObjectName("AppTitle")
+        brand_box.setSpacing(8)
+        app_title = QLabel("SLT BILINGUAL CORE")
+        app_title.setObjectName("brand")
 
-        self.mode_badge = QLabel("EN VIVO")
-        self.mode_badge.setObjectName("ModeBadgeLive")
+        self.mode_badge = QLabel("READY")
+        self.mode_badge.setObjectName("status")
 
         brand_box.addWidget(app_title)
         brand_box.addWidget(self.mode_badge)
@@ -126,7 +126,7 @@ class MainWindow(QMainWindow):
 
         # Voice Selector
         voice_lbl = QLabel("Voz:")
-        voice_lbl.setStyleSheet("color: #94A3B8; font-weight: 500;")
+        voice_lbl.setStyleSheet("color: #8EA5AF; font-weight: 500;")
         header_layout.addWidget(voice_lbl)
 
         self.voice_combo = QComboBox()
@@ -140,12 +140,12 @@ class MainWindow(QMainWindow):
         self.auto_speak_toggle.toggled.connect(self._on_auto_speak_toggled)
         header_layout.addWidget(self.auto_speak_toggle)
 
-        # Video / Camera Switch Buttons
-        self.btn_open_video = QPushButton("Abrir Video...")
+        # Video / Camera Source Buttons
+        self.btn_open_video = QPushButton("Analizar vídeo...")
         self.btn_open_video.clicked.connect(self._on_open_video_clicked)
         header_layout.addWidget(self.btn_open_video)
 
-        self.btn_live_camera = QPushButton("Cámara en Vivo")
+        self.btn_live_camera = QPushButton("Cámara")
         self.btn_live_camera.setObjectName("PrimaryButton")
         self.btn_live_camera.clicked.connect(self._on_live_camera_clicked)
         header_layout.addWidget(self.btn_live_camera)
@@ -153,116 +153,154 @@ class MainWindow(QMainWindow):
         main_layout.addWidget(header_card)
 
         # -------------------------------------------------------------
-        # 2. Central Section (Video Canvas + Subtitle Banner)
+        # 2. Área Central Dividida:
+        #    - Izquierda: Cámara / Vista de vídeo
+        #    - Derecha: Secuencia de señas y traducciones bilingües
         # -------------------------------------------------------------
-        canvas_card = QFrame()
-        canvas_card.setObjectName("VideoCard")
-        canvas_layout = QVBoxLayout(canvas_card)
-        canvas_layout.setContentsMargins(12, 12, 12, 12)
-        canvas_layout.setSpacing(10)
+        content_layout = QHBoxLayout()
+        content_layout.setSpacing(12)
+
+        # === ÁREA PRINCIPAL IZQUIERDA: CÁMARA ===
+        video_card = QFrame()
+        video_card.setObjectName("videoCard")
+        video_card_layout = QVBoxLayout(video_card)
+        video_card_layout.setContentsMargins(10, 10, 10, 10)
+        video_card_layout.setSpacing(8)
+
+        video_header = QHBoxLayout()
+        video_title = QLabel("VISTA DE CÁMARA")
+        video_title.setObjectName("subtitle")
+        self.cam_status_lbl = QLabel("CAMERA 01 · RECOGNITION ACTIVE")
+        self.cam_status_lbl.setStyleSheet("color: #67CCBC; font-size: 10px; font-weight: 600;")
+        video_header.addWidget(video_title)
+        video_header.addStretch()
+        video_header.addWidget(self.cam_status_lbl)
+        video_card_layout.addLayout(video_header)
 
         # Video Frame Display (Clean Aspect Ratio)
         self.video_label = QLabel()
         self.video_label.setAlignment(Qt.AlignCenter)
-        self.video_label.setMinimumSize(640, 380)
+        self.video_label.setMinimumSize(540, 380)
         self.video_label.setStyleSheet("background-color: #0A0D12; border-radius: 6px;")
-        canvas_layout.addWidget(self.video_label, stretch=1)
+        video_card_layout.addWidget(self.video_label, stretch=1)
 
-        # Subtitle Display Card (High Contrast Legibility)
-        sub_card = QFrame()
-        sub_card.setObjectName("SubtitleCard")
-        sub_card.setStyleSheet("background-color: #161C26; border: 1px solid #2D3748; border-radius: 8px;")
-        sub_layout = QVBoxLayout(sub_card)
-        sub_layout.setContentsMargins(18, 12, 18, 12)
-        sub_layout.setSpacing(6)
+        content_layout.addWidget(video_card, stretch=6)
 
-        # Subtitle Controls Row
-        sub_controls = QHBoxLayout()
-        sub_title = QLabel("TRADUCCIÓN BILINGÜE SIMULTÁNEA")
-        sub_title.setObjectName("SubtitleHeading")
-        sub_controls.addWidget(sub_title)
-        sub_controls.addStretch()
+        # === ÁREA DERECHA: SECUENCIA DE SEÑAS Y TRADUCCIONES ===
+        right_panel = QVBoxLayout()
+        right_panel.setSpacing(10)
 
-        self.btn_speak = QPushButton("Pronunciar")
-        self.btn_speak.setObjectName("PrimaryButton")
-        self.btn_speak.clicked.connect(self._on_speak_clicked)
-        sub_controls.addWidget(self.btn_speak)
+        # 2.1 Card: Secuencia de Señas
+        seq_card = QFrame()
+        seq_card.setObjectName("translationCard")
+        seq_layout = QVBoxLayout(seq_card)
+        seq_layout.setContentsMargins(14, 10, 14, 10)
+        seq_layout.setSpacing(6)
 
-        self.btn_copy = QPushButton("Copiar traducción")
-        self.btn_copy.clicked.connect(self._on_copy_clicked)
-        sub_controls.addWidget(self.btn_copy)
-
-        sub_layout.addLayout(sub_controls)
-
-        # Spanish Translation Output
-        self.lbl_es = QLabel("Esperando señas...")
-        self.lbl_es.setObjectName("SubtitleTextES")
-        self.lbl_es.setWordWrap(True)
-        sub_layout.addWidget(self.lbl_es)
-
-        # English Translation Output
-        self.lbl_en = QLabel("Waiting for signs...")
-        self.lbl_en.setObjectName("SubtitleTextEN")
-        self.lbl_en.setWordWrap(True)
-        sub_layout.addWidget(self.lbl_en)
-
-        canvas_layout.addWidget(sub_card)
-        main_layout.addWidget(canvas_card, stretch=1)
-
-        # -------------------------------------------------------------
-        # 3. Timeline / Recognized Signs Strip
-        # -------------------------------------------------------------
-        timeline_card = QFrame()
-        timeline_card.setObjectName("TimelineCard")
-        timeline_layout = QHBoxLayout(timeline_card)
-        timeline_layout.setContentsMargins(16, 8, 16, 8)
-        timeline_layout.setSpacing(10)
-
-        timeline_lbl = QLabel("Historial:")
-        timeline_lbl.setStyleSheet("color: #94A3B8; font-weight: 600; font-size: 12px;")
-        timeline_layout.addWidget(timeline_lbl)
-
-        self.lbl_gloss_strip = QLabel("(Sin señas confirmadas)")
-        self.lbl_gloss_strip.setStyleSheet(
-            "color: #42BFB0; font-family: monospace; font-size: 13px; font-weight: 600;"
-        )
-        self.lbl_gloss_strip.setWordWrap(True)
-        timeline_layout.addWidget(self.lbl_gloss_strip, stretch=1)
+        seq_header = QHBoxLayout()
+        seq_title = QLabel("SECUENCIA DE SEÑAS")
+        seq_title.setObjectName("subtitle")
+        seq_header.addWidget(seq_title)
+        seq_header.addStretch()
 
         self.btn_undo = QPushButton("Deshacer")
         self.btn_undo.setToolTip("Eliminar última seña confirmada (Ctrl+Z)")
         self.btn_undo.clicked.connect(self._on_undo_clicked)
-        timeline_layout.addWidget(self.btn_undo)
+        seq_header.addWidget(self.btn_undo)
 
         self.btn_clear = QPushButton("Limpiar")
         self.btn_clear.setObjectName("DangerButton")
         self.btn_clear.setToolTip("Limpiar historial y oraciones (Esc)")
         self.btn_clear.clicked.connect(self._on_clear_clicked)
-        timeline_layout.addWidget(self.btn_clear)
+        seq_header.addWidget(self.btn_clear)
+        seq_layout.addLayout(seq_header)
 
-        # Video Export Buttons
+        self.lbl_gloss_strip = QLabel("(Sin señas confirmadas)")
+        self.lbl_gloss_strip.setStyleSheet(
+            "color: #42BFB0; font-family: monospace; font-size: 14px; font-weight: 700; padding: 4px 0;"
+        )
+        self.lbl_gloss_strip.setWordWrap(True)
+        seq_layout.addWidget(self.lbl_gloss_strip)
+        right_panel.addWidget(seq_card)
+
+        # 2.2 Card: Traducción Español
+        es_card = QFrame()
+        es_card.setObjectName("translationCard")
+        es_layout = QVBoxLayout(es_card)
+        es_layout.setContentsMargins(14, 12, 14, 12)
+        es_layout.setSpacing(4)
+
+        es_title = QLabel("ESPAÑOL")
+        es_title.setObjectName("subtitle")
+        es_layout.addWidget(es_title)
+
+        self.lbl_es = QLabel("Esperando señas...")
+        self.lbl_es.setObjectName("SubtitleTextES")
+        self.lbl_es.setWordWrap(True)
+        es_layout.addWidget(self.lbl_es)
+        right_panel.addWidget(es_card)
+
+        # 2.3 Card: Translation English
+        en_card = QFrame()
+        en_card.setObjectName("translationCard")
+        en_layout = QVBoxLayout(en_card)
+        en_layout.setContentsMargins(14, 12, 14, 12)
+        en_layout.setSpacing(4)
+
+        en_title = QLabel("ENGLISH")
+        en_title.setObjectName("subtitle")
+        en_layout.addWidget(en_title)
+
+        self.lbl_en = QLabel("Waiting for signs...")
+        self.lbl_en.setObjectName("SubtitleTextEN")
+        self.lbl_en.setWordWrap(True)
+        en_layout.addWidget(self.lbl_en)
+        right_panel.addWidget(en_card)
+
+        # 2.4 Panel de Acciones y Exportación
+        actions_card = QFrame()
+        actions_card.setObjectName("translationCard")
+        actions_layout = QHBoxLayout(actions_card)
+        actions_layout.setContentsMargins(10, 8, 10, 8)
+        actions_layout.setSpacing(8)
+
+        self.btn_speak = QPushButton("Pronunciar")
+        self.btn_speak.setObjectName("PrimaryButton")
+        self.btn_speak.setToolTip("Pronunciar la traducción actual (Espacio)")
+        self.btn_speak.clicked.connect(self._on_speak_clicked)
+        actions_layout.addWidget(self.btn_speak)
+
+        self.btn_copy = QPushButton("Copiar")
+        self.btn_copy.setToolTip("Copiar traducción bilingüe al portapapeles (Ctrl+C)")
+        self.btn_copy.clicked.connect(self._on_copy_clicked)
+        actions_layout.addWidget(self.btn_copy)
+
         self.btn_export_srt = QPushButton("Exportar SRT")
         self.btn_export_srt.setEnabled(False)
+        self.btn_export_srt.setToolTip("Exportar subtítulos sincronizados en formato SRT")
         self.btn_export_srt.clicked.connect(self._on_export_srt_clicked)
-        timeline_layout.addWidget(self.btn_export_srt)
+        actions_layout.addWidget(self.btn_export_srt)
 
         self.btn_export_txt = QPushButton("Exportar TXT")
         self.btn_export_txt.setEnabled(False)
+        self.btn_export_txt.setToolTip("Exportar reporte detallado en archivo TXT")
         self.btn_export_txt.clicked.connect(self._on_export_txt_clicked)
-        timeline_layout.addWidget(self.btn_export_txt)
+        actions_layout.addWidget(self.btn_export_txt)
 
-        main_layout.addWidget(timeline_card)
+        right_panel.addWidget(actions_card)
+        content_layout.addLayout(right_panel, stretch=5)
+
+        main_layout.addLayout(content_layout, stretch=1)
 
         # -------------------------------------------------------------
-        # 4. Cleanmeter Telemetry Bar
+        # 3. Franja Inferior: Estado Técnico (Cleanmeter)
         # -------------------------------------------------------------
         cleanmeter_card = QFrame()
         cleanmeter_card.setObjectName("CleanmeterCard")
         cleanmeter_layout = QHBoxLayout(cleanmeter_card)
-        cleanmeter_layout.setContentsMargins(16, 6, 16, 6)
-        cleanmeter_layout.setSpacing(18)
+        cleanmeter_layout.setContentsMargins(14, 6, 14, 6)
+        cleanmeter_layout.setSpacing(16)
 
-        # Telemetry Labels
         self.lbl_fps = QLabel("FPS: --")
         self.lbl_fps.setObjectName("TelemetryItem")
         cleanmeter_layout.addWidget(self.lbl_fps)
@@ -289,8 +327,8 @@ class MainWindow(QMainWindow):
 
         cleanmeter_layout.addStretch()
 
-        self.lbl_status = QLabel("● Motor activo")
-        self.lbl_status.setStyleSheet("color: #2DD4BF; font-weight: 600; font-size: 11px;")
+        self.lbl_status = QLabel("● ENGINE ACTIVE")
+        self.lbl_status.setStyleSheet("color: #67CCBC; font-weight: 700; font-size: 11px;")
         cleanmeter_layout.addWidget(self.lbl_status)
 
         main_layout.addWidget(cleanmeter_card)
