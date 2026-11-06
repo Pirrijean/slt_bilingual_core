@@ -15,3 +15,5 @@ def setup_logger(name="slt"):
         logger.addHandler(fh)
         logger.addHandler(ch)
     return logger
+
+setup_logging = setup_logger

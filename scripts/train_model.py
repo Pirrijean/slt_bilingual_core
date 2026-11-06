@@ -3,10 +3,13 @@ import json
 from pathlib import Path
 import numpy as np
 
-from slt.vision.landmark_extractor import extract_features
-from slt.recognition.trainer import train_slt_model
-from slt.recognition.classifier import SLTClassifier
-from slt.recognition.metrics import compute_confusion_matrix, compute_metrics
+from slt.recognition import (
+    extract_features,
+    train_slt_model,
+    SLTClassifier,
+    compute_confusion_matrix,
+    compute_metrics
+)
 from slt.utils.paths import CLASSES_PATH, SLT_MODEL_PATH, MODEL_METADATA_PATH
 
 def generate_augmented_landmarks(base_pts: np.ndarray, n_samples: int, rng: np.random.Generator) -> list[np.ndarray]:

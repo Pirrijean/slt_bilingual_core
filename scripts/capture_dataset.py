@@ -4,9 +4,8 @@ import json
 from pathlib import Path
 import cv2
 
-from slt.vision.hand_detector import HandDetector
-from slt.vision.drawing import draw_hand_landmarks
-from slt.vision.landmark_extractor import extract_features
+from slt.perception import HandDetector, draw_hand_skeleton
+from slt.recognition import extract_features
 from slt.utils.paths import HAND_LANDMARKER_TASK, DATA_DIR, CLASSES_PATH
 
 def main():

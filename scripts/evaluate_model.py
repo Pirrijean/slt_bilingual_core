@@ -3,8 +3,7 @@ import time
 import json
 import numpy as np
 
-from slt.recognition.classifier import SLTClassifier
-from slt.recognition.metrics import compute_confusion_matrix, compute_metrics
+from slt.recognition import SLTClassifier, compute_confusion_matrix, compute_metrics
 from slt.utils.paths import SLT_MODEL_PATH, MODEL_METADATA_PATH
 
 def main():
